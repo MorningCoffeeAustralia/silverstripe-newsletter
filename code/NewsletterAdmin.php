@@ -511,7 +511,7 @@ class NewsletterAdmin extends LeftAndMain {
 
 		// Get all themes and add to path list
 		// If non-theme directories exist, they are filtered out before adding to self::$template_paths
-		$handle = opendir(THEMES_DIR);
+		$handle = opendir(BASE_PATH.'/'.THEMES_DIR);
 		while(false !== ($theme = readdir($handle))) {
 			if($theme != '.' && $theme != '..') {
 				$paths[] = THEMES_DIR."/$theme/templates/email";
