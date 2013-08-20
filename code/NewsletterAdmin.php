@@ -467,21 +467,14 @@ class NewsletterAdmin extends LeftAndMain {
 	 * @return array
 	 */
 	public static function template_paths() {
-		if(!isset(self::$template_paths)) {
-			if(file_exists("../".THEMES_DIR."/".SSViewer::current_theme()."/templates/email")){
-				self::$template_paths[] = THEMES_DIR."/".SSViewer::current_theme()."/templates/email";
+		if( self::$template_paths === null ) {
+			self::$template_paths = array();
+
+			if( ClassInfo::exists('Subsite') ) {
+				self::set_multi_site_template_paths();
 			}
-			
-			if(file_exists("../".THEMES_DIR."/".SSViewer::current_theme()."/templates/Email")){
-				self::$template_paths[] = THEMES_DIR."/".SSViewer::current_theme()."/templates/Email";
-			}
-			
-			if(file_exists("../".project() . '/templates/email')){
-				self::$template_paths[] = project() . '/templates/email';
-			}
-			
-			if(file_exists("../".project() . '/templates/Email')){
-				self::$template_paths[] = project() . '/templates/Email';
+			else {
+				self::set_single_site_template_paths();
 			}
 		}
 		else {
@@ -491,6 +484,68 @@ class NewsletterAdmin extends LeftAndMain {
 		}
 		
 		return self::$template_paths;
+	}
+
+	/**
+	 * Since an instance with subsites enabled could have many active themes and many active projects
+	 * get all module directories and all themes
+	 */
+	protected static function set_multi_site_template_paths() {
+		$paths = array();
+
+		// Find the path segments for all modules
+		$classes = ClassInfo::subclassesFor('DataObject');
+		array_shift($classes);
+
+		$modules = array();
+		foreach($classes as $class) {
+			$model = new ModelViewer_Model($class);
+			$modules[$model->Module] = $model->Module;
+		}
+
+		// Add the module paths to the path list
+		foreach($modules as $module) {
+			$paths[] = "$module/templates/email";
+			$paths[] = "$module/templates/Email";
+		}
+
+		// Get all themes and add to path list
+		// If non-theme directories exist, they are filtered out before adding to self::$template_paths
+		$handle = opendir(THEMES_DIR);
+		while(false !== ($theme = readdir($handle))) {
+			if($theme != '.' && $theme != '..') {
+				$paths[] = THEMES_DIR."/$theme/templates/email";
+				$paths[] = THEMES_DIR."/$theme/templates/Email";
+			}
+		}
+
+		// For each path that is a valid directory, add to the self::$template_paths array
+		foreach($paths as $path) {
+			if(is_dir("../$path")) {
+				self::$template_paths[] = $path;
+			}
+		}
+	}
+
+	/**
+	 * In a single site instance we can rely on just the active project and theme
+	 */
+	protected static function set_single_site_template_paths() {
+		if(file_exists("../".THEMES_DIR."/".SSViewer::current_theme()."/templates/email")){
+			self::$template_paths[] = THEMES_DIR."/".SSViewer::current_theme()."/templates/email";
+		}
+		
+		if(file_exists("../".THEMES_DIR."/".SSViewer::current_theme()."/templates/Email")){
+			self::$template_paths[] = THEMES_DIR."/".SSViewer::current_theme()."/templates/Email";
+		}
+		
+		if(file_exists("../".project() . '/templates/email')){
+			self::$template_paths[] = project() . '/templates/email';
+		}
+		
+		if(file_exists("../".project() . '/templates/Email')){
+			self::$template_paths[] = project() . '/templates/Email';
+		}
 	}
 	
 	/**
