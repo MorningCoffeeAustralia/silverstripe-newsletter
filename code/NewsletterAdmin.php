@@ -736,7 +736,7 @@ class NewsletterAdmin extends LeftAndMain {
 
 		FormResponse::set_node_title("mailtype_$id", $record->Title);
 		FormResponse::status_message(_t('NewsletterAdmin.SAVED','Saved'), 'good');
-		$result = $this->getActionUpdateJS($record);
+		FormResponse::add($this->getActionUpdateJS($record));
 		return FormResponse::respond();
 	}
 
