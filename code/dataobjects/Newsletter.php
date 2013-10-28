@@ -7,20 +7,20 @@
 class Newsletter extends DataObject {
 
 	static $db = array(
-		"Status" => "Enum('Draft, Send', 'Draft')",
-		"Content" => "HTMLText",
-		"Subject" => "Varchar(255)",
-		"SentDate" => "Datetime"
+		'Status' => "Enum('Draft, Send', 'Draft')",
+		'Subject' => 'Varchar(255)',
+		'SentDate' => 'Datetime'
 	);
 
 	static $has_one = array(
-		"Parent" => "NewsletterType",
+		'Parent' => 'NewsletterType',
 	);
 
 	static $has_many = array(
-		"Recipients" => "Newsletter_Recipient",
-		"SentRecipients" => "Newsletter_SentRecipient",
-		"TrackedLinks" => "Newsletter_TrackedLink"
+		'Articles' => 'NewsletterArticle',
+		'Recipients' => 'Newsletter_Recipient',
+		'SentRecipients' => 'Newsletter_SentRecipient',
+		'TrackedLinks' => 'Newsletter_TrackedLink'
 	);
 
 	/**
@@ -40,7 +40,6 @@ class Newsletter extends DataObject {
 			new TabSet("Root",
 				$mailTab = new Tab(_t('Newsletter.NEWSLETTER', 'Newsletter'),
 					new TextField("Subject", _t('Newsletter.SUBJECT', 'Subject'), $this->Subject),
-					new HtmlEditorField("Content", _t('Newsletter.CONTENT', 'Content')),
 					new LiteralField('PreviewNewsletter', "<p><a href=\"$previewLink\" target=\"_blank\">" . _t('PREVIEWNEWSLETTER', 'Preview this newsletter') . "</a></p>")
 				),
 				$sentToTab = new Tab(_t('Newsletter.SENTREPORT', 'Sent Status Report'),
@@ -86,6 +85,20 @@ class Newsletter extends DataObject {
 
 		$this->extend('updateCMSActions', $actions);
 		return $actions;
+	}
+
+	/**
+	 * Creates a blank article and associates it with this newsletter
+	 *
+	 * @return Article
+	 */
+	public function createArticle() {
+		$article = new NewsletterArticle;
+		$article->NewsletterID = $this->ID;
+		$article->Title = 'New article';
+		$article->write();
+
+		return $article;
 	}
 
 	/**

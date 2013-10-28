@@ -20,6 +20,7 @@ class NewsletterAdmin extends LeftAndMain {
 	static $template_paths = null; //could be customised in _config 
 
 	static $allowed_actions = array(
+		'addarticle',
 		'adddraft',
 		'addgroup',
 		'addtype',
@@ -881,6 +882,48 @@ JS;
 
 	public function NewsletterTypes() {
 		return DataObject::get("NewsletterType","");
+	}
+
+	/**
+	 * Called by AJAX to create a new newsletter article
+	 * Top level call
+	 */
+	public function addarticle($request) {
+		$ID = intval($request->getVar('ParentID'));
+		$securityMsg = null;
+
+		if ($ID) {
+			$newsletter = DataObject::get_by_id('Newsletter', $ID);
+			if ($newsletter) {
+				// It should be safe to assume that if you can create newsletters you can create articles
+				if(!$newsletter->canCreate()) {
+					$securityMsg = 'Sorry, you do not have permission to create articles';
+				}
+			}
+			else {
+				$securityMsg = 'Invalid newsletter ID';
+			}
+		}
+		else {
+			$securityMsg = 'Invalid newsletter ID';
+		}
+
+		if ($securityMsg) {
+			Security::permissionFailure(null, $message);
+			return $message;
+		}
+
+		$article = $newsletter->createArticle();
+		$form = $article->getNewsletterArticleEditForm();
+
+		return new SS_HTTPResponse(
+			Convert::array2json(
+				array(
+					'html' => $form->forAjaxTemplate(),
+					'message' => "A new article has been added to $newsletter->Subject"
+				)
+			)
+		);
 	}
 
 	/**

@@ -35,6 +35,7 @@ ul.tree li.MailType span.Sent a {
 				<select name="PageType" id="add_type">
 					<option value="type"><% _t('ADDTYPE','Add new type') %></option>
 					<option value="draft"><% _t('ADDDRAFT','Add new draft') %></option>
+					<option value="article"><% _t('ADDARTICLE','Add new article') %></option>
 				</select>
 			<input class="action" type="submit" value="<% _t('GO','Go') %>" />
 		</form>
