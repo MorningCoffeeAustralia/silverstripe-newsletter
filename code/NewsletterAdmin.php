@@ -20,6 +20,7 @@ class NewsletterAdmin extends LeftAndMain {
 	static $template_paths = null; //could be customised in _config 
 
 	static $allowed_actions = array(
+		'addarticle',
 		'adddraft',
 		'addgroup',
 		'addtype',

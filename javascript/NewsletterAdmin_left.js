@@ -218,10 +218,10 @@ SiteTreeNode.prototype.getPageFromServer = function() {
    	if( $('Form_EditForm_ID') )
    		currentPageID = $('Form_EditForm_ID').value;
    	
-    var newPageID = null;
-    var otherID = null;
-    var type = null;
-    
+	var newPageID = null;
+	var otherID = null;
+	var type = null;
+	
 		if( match ) {
 	  
 	  newPageID = match[2];
@@ -235,27 +235,27 @@ SiteTreeNode.prototype.getPageFromServer = function() {
 };
 
 function draft_sent_ok( newsletterID, draftID, numEmails ) {
-    var draftsListNode = $('drafts_' + newsletterID);
-    var sentListNode = $('sent_' + newsletterID);
-    var draftNode = $('draft_' + newsletterID + '_' + draftID );
-    
-    draftsListNode.removeTreeNode( draftNode );
-    draftNode.id = 'sent_' + newsletterID + '_' + draftID;
-    sentListNode.appendTreeNode( draftNode, null );
+	var draftsListNode = $('drafts_' + newsletterID);
+	var sentListNode = $('sent_' + newsletterID);
+	var draftNode = $('draft_' + newsletterID + '_' + draftID );
+	
+	draftsListNode.removeTreeNode( draftNode );
+	draftNode.id = 'sent_' + newsletterID + '_' + draftID;
+	sentListNode.appendTreeNode( draftNode, null );
 
-    if(numEmails > 0) {
-        statusMessage('Sent newsletter to mailing list. Sent ' + numEmails + ' emails successfully.', 'good'); 
-    } else {
-        statusMessage('Your mailing list is empty, so nothing was sent.  However, this newsletter has been moved from "Drafts" to "Sent Items".', 'bad');
-    }
+	if(numEmails > 0) {
+		statusMessage('Sent newsletter to mailing list. Sent ' + numEmails + ' emails successfully.', 'good'); 
+	} else {
+		statusMessage('Your mailing list is empty, so nothing was sent.  However, this newsletter has been moved from "Drafts" to "Sent Items".', 'bad');
+	}
 }
 
 function resent_ok( newsletterID, sentID, numEmails ) {
-    if(numEmails > 0) {
-        statusMessage('Resent newsletter to mailing list. Sent ' + numEmails + ' emails successfully.', 'good'); 
-    } else {
-        statusMessage('Your mailing list is empty, so nothing was sent.', 'bad');
-    }
+	if(numEmails > 0) {
+		statusMessage('Resent newsletter to mailing list. Sent ' + numEmails + ' emails successfully.', 'good'); 
+	} else {
+		statusMessage('Your mailing list is empty, so nothing was sent.', 'bad');
+	}
 }
 
 function reloadSiteTree() {
@@ -296,8 +296,9 @@ AddForm.prototype = {
 		}
 		$(_HANDLER_FORMS[this.id]).onsubmit = this.form_submit;
 	},
-    
+
 	form_submit : function() {
+		var parentID = null;
 		var st = $('sitetree');
 		var selectedNode = (st && st.selected && st.selected.length) ? st.selected[0] : null;
 		var type = $('add_type').value;
@@ -308,25 +309,25 @@ AddForm.prototype = {
 			else {
 				alert("Please select a draft newsletter before adding an article");
 			}
-        	} else {
-			var selectedNode = null;
 		}
-		var parentID = null;
-    
-    		while( selectedNode && !parentID ) {
-        		if( selectedNode && selectedNode.id && selectedNode.id.match(/mailtype_([0-9a-z\-]+)$/) )
-            			parentID = RegExp.$1;
-        		else
-            			selectedNode = selectedNode.parentNode;
-    		}
-        
-		if(parentID && parentID.substr(0,3) == 'new') {
-			alert("You have to save a page before adding children underneath it");
-			
-		} else {
-			if (this.elements) {
-				this.elements.ParentID.value = parentID;
+		else {
+			while (selectedNode && !parentID) {
+				if (selectedNode && selectedNode.id && selectedNode.id.match(/mailtype_([0-9a-z\-]+)$/)) {
+					parentID = RegExp.$1;
+				}
+				else {
+					selectedNode = selectedNode.parentNode;
+				}
 			}
+		}
+
+		if (parentID || type === 'type') {
+			if (parentID && parentID.substr(0,3) == 'new') {
+				alert("Please save the page before adding children underneath it");
+			} else {
+				if (this.elements) {
+					this.elements.ParentID.value = parentID;
+				}
 
 				// Call action
 				var url = this.action + type + '?ajax=1' + (parentID ? '&ParentID=' + parentID : '');
@@ -359,38 +360,17 @@ AddForm.prototype = {
 					}
 				});
 			}
-			// Call either addtype or adddraft
-			var request = new Ajax.Request( this.action + type + '?ajax=1' + '&ParentID=' + parentID, {
-				method: 'get',
-				asynchronous: true,
-				onSuccess : function( response ) {
-					
-					$('Form_EditForm').loadNewPage(response.responseText);
-					
-					// create a new node and add it to the site tree
-					if( type == 'draft' ) {
-						$('sitetree').addDraftNode('New draft newsletter', parentID, $('Form_EditForm_ID').value );
-					} else {
-						$('sitetree').addTypeNode('New newsletter type', $('Form_EditForm_ID').value ); 
-					}
-					statusMessage('Added new ' + type);
-				},
-	
-				onFailure : function(response) {
-					alert(response.responseText);
-					statusMessage('Could not add new ' + type );
-				}
-			});
-		
+		}
+
 		return false;
 	},
-    
+	
   reloadSiteTree: function( response ) {
-    statusMessage('Added new newsletter type', 'good' );
-    $('sitetree_holder').innerHTML = response.responseText;
-    Behaviour.apply( $('sitetree_holder') );
+	statusMessage('Added new newsletter type', 'good' );
+	$('sitetree_holder').innerHTML = response.responseText;
+	Behaviour.apply( $('sitetree_holder') );
   },
-    
+	
   button_onclick : function() {
 		if(treeactions.toggleSelection(this)) {
 			var selectedNode = $('sitetree').firstSelected();
@@ -408,7 +388,7 @@ AddForm.prototype = {
 	},
 
   treeSelectionChanged: function( treeNode ) {
-    this.selected = treeNode;
+	this.selected = treeNode;
   },
   
   popupClosed: function() {
@@ -432,12 +412,12 @@ function removeTreeNodeByIdx( tree, nodeID ) {
 Behaviour.addLoader(function () {
 	// Set up add draft
 	Observable.applyTo($('addtype_options'));
-    
-    if( $('addtype') ) {
-    	if( AddForm.button_click )
-	    $('addtype').getElementsByTagName('a')[0].onclick = function() {return false;};
-	    if( AddForm.button_click )
-	    	$('addtype_options').onsubmit = AddForm.form_submit;
+	
+	if( $('addtype') ) {
+		if( AddForm.button_click )
+		$('addtype').getElementsByTagName('a')[0].onclick = function() {return false;};
+		if( AddForm.button_click )
+			$('addtype_options').onsubmit = AddForm.form_submit;
 	}
 	// Set up delete drafts
 	Observable.applyTo($('deletedrafts_options'));
