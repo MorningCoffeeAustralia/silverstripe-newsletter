@@ -44,6 +44,14 @@ SiteTree.prototype = {
 		
 		return node;
 	},
+
+	addArticleNode: function(title, parentID, draftID) {
+		console.log(title, parentID, draftID);
+		var st = $('sitetree');
+		var draftNode = this.createTreeNode( 'article_' + draftID, 'Node title', 'Draft', parentID );
+		this.getTreeNodeByIdx(parentID).appendTreeNode( draftNode );
+		this.changeCurrentTo( draftNode );
+	},
 	
 	addDraftNode: function( title, parentID, draftID ) {
 		var st = $('sitetree');
@@ -196,16 +204,16 @@ SiteTreeNode.prototype.onselect = function() {
 	$('add_type').value = 'draft';
 	$('sitetree').changeCurrentTo(this);
 	if($('sitetree').notify('SelectionChanged', this)) {
-		autoSave(true, this.getPageFromServer.bind(this));
+		autoSave(true, this.getPageFromServer.bind(this));// prototype error: Refused to set unsafe header "Connection" 
 	}
 	return false; 
 };
 
 SiteTreeNode.prototype.getPageFromServer = function() {
 
-    var match = this.id.match(/(mailtype|drafts|draft|sent|recipients)_([\d]+)$/);
-    var openTabName = null;
-    var currentPageID = null;
+	var match = this.id.match(/(mailtype|drafts|draft|sent|recipients|article)_([\d]+)$/);
+	var openTabName = null;
+	var currentPageID = null;
    	
    	if( $('Form_EditForm_ID') )
    		currentPageID = $('Form_EditForm_ID').value;
@@ -215,10 +223,10 @@ SiteTreeNode.prototype.getPageFromServer = function() {
     var type = null;
     
 		if( match ) {
-      
-      newPageID = match[2];
-      type = match[1];
-		} else if(this.id.match(/(mailtype|drafts|draft|sent|recipients)_([\d]+)_([\d]+)$/)) {
+	  
+	  newPageID = match[2];
+	  type = match[1];
+		} else if(this.id.match(/(mailtype|drafts|draft|sent|recipients|article)_([\d]+)_([\d]+)$/)) {
 			newPageID = RegExp.$2;
 			type = RegExp.$1;
 			otherID = RegExp.$3;
@@ -258,7 +266,7 @@ function reloadSiteTree() {
 			$('sitetree_holder').innerHTML = response.responseText;
 		},
 		onFailure: function( response ) {
-				
+			alert('Failed to reload SiteTree, you may need to reload the page.');
 		}	
 	});
 		
@@ -291,11 +299,14 @@ AddForm.prototype = {
     
 	form_submit : function() {
 		var st = $('sitetree');
-		if (st) {
-			if( st.selected && st.selected.length ) {
-				selectedNode = st.selected[0];
-			} else {
-				selectedNode = st.selected;
+		var selectedNode = (st && st.selected && st.selected.length) ? st.selected[0] : null;
+		var type = $('add_type').value;
+		if (type === 'article') {
+			if (selectedNode.id.match(/^draft_[\d]+_([\d]+)$/)) {
+				parentID = selectedNode.id.replace(/^draft_[\d]+_([\d]+)$/, '$1');
+			}
+			else {
+				alert("Please select a draft newsletter before adding an article");
 			}
         	} else {
 			var selectedNode = null;
@@ -317,12 +328,36 @@ AddForm.prototype = {
 				this.elements.ParentID.value = parentID;
 			}
 
-			var type = 'draft';
-			var selectIDPrefix = 'draft_' + parentID + '_';
-			
-			if( $('add_type').value == 'type' ) {
-				type = 'type';
-				selectIDPrefix = 'mailtype_';
+				// Call action
+				var url = this.action + type + '?ajax=1' + (parentID ? '&ParentID=' + parentID : '');
+				var request = new Ajax.Request(url, {
+					method: 'get',
+					asynchronous: true,
+					onSuccess : function(response) {
+						var formID = $('Form_EditForm_ID').value;
+						$('Form_EditForm').loadNewPage(response.responseText);
+
+						// create a new node and add it to the site tree
+						switch (type) {
+							case 'article':
+								st.addArticleNode('New newsletter article', selectedNode.id, formID);
+								break;
+							case 'draft':
+								st.addDraftNode('New draft newsletter', parentID, formID);
+								break;
+							case 'type':
+								st.addTypeNode('New newsletter type', formID);
+								break;
+						}
+
+						statusMessage('Added new ' + type);
+					},
+		
+					onFailure : function(response) {
+						alert(response.responseText);
+						statusMessage('Could not add new ' + type );
+					}
+				});
 			}
 			// Call either addtype or adddraft
 			var request = new Ajax.Request( this.action + type + '?ajax=1' + '&ParentID=' + parentID, {
@@ -346,7 +381,6 @@ AddForm.prototype = {
 					statusMessage('Could not add new ' + type );
 				}
 			});
-		}
 		
 		return false;
 	},
@@ -407,12 +441,12 @@ Behaviour.addLoader(function () {
 	}
 	// Set up delete drafts
 	Observable.applyTo($('deletedrafts_options'));
-    
-    var deleteDrafts = $('deletedrafts');
-    
-    if( deleteDrafts ) {
-	    deleteDrafts.onclick = deletedraft.button_onclick;
-	    deleteDrafts.getElementsByTagName('button')[0].onclick = function() {return false;};
-	    $('deletedrafts_options').onsubmit = deletedraft.form_submit;
-    }
+	
+	var deleteDrafts = $('deletedrafts');
+	
+	if( deleteDrafts ) {
+		deleteDrafts.onclick = deletedraft.button_onclick;
+		deleteDrafts.getElementsByTagName('button')[0].onclick = function() {return false;};
+		$('deletedrafts_options').onsubmit = deletedraft.form_submit;
+	}
 });
