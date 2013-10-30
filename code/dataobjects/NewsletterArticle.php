@@ -9,6 +9,10 @@ class NewsletterArticle extends DataObject {
 		'Image' => 'BetterImage',
 		'Newsletter' => 'Newsletter'
 	);
+	
+	public static $defaults = array(
+		'Title' => 'New Article'
+	);
 
 	public function getNewsletterArticleEditForm() {
 		$fields = $this->getCMSFields();

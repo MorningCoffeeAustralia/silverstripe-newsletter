@@ -927,7 +927,9 @@ JS;
 			return $message;
 		}
 
-		$article = $newsletter->createArticle();
+		$article = new NewsletterArticle();
+		$article->NewsletterID = $newsletter->ID;
+		$article->write();
 		$form = $article->getNewsletterArticleEditForm();
 		return $this->showWithEditForm( $request->allParams() , $form );
 //		return new SS_HTTPResponse(
