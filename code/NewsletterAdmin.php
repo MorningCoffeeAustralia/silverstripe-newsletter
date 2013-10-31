@@ -7,6 +7,7 @@
  */
 
 class NewsletterAdmin extends LeftAndMain {
+	
 	static $subitem_class = 'Member';
 	
 	/** 
@@ -210,8 +211,8 @@ class NewsletterAdmin extends LeftAndMain {
 		
 		$article = DataObject::get_by_id('NewsletterArticle', $params['ID']);
 		
-//		$actions = new FieldSet(new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save')));
-//		$form = new Form($this, "TypeEditForm", $article->getCMSFields(), $actions);
+		$actions = new FieldSet(new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save')));
+		$form = new Form($this, "TypeEditForm", $article->getCMSFields(), $actions);
 		
 		$form = $article->getNewsletterArticleEditForm();
 		
@@ -270,8 +271,9 @@ class NewsletterAdmin extends LeftAndMain {
     public function EditForm() {
 		// Include JavaScript to ensure HtmlEditorField works.
 		HtmlEditorField::include_js();
-		
     	if((isset($_REQUEST['ID']) && isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Newsletter') || isset($_REQUEST['action_savenewsletter'])) {
+    		$form = $this->ArticleEditForm();
+		} elseif((isset($_REQUEST['ID']) && isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Article') ) {
     		$form = $this->NewsletterEditForm();
     	} else {
 
@@ -292,6 +294,12 @@ class NewsletterAdmin extends LeftAndMain {
     		$id = 0;
     	}
     	return $this->getNewsletterEditForm($id);
+    }
+
+    public function ArticleEditForm() {
+		// dispensing of the pleasantries and just assuming id is valid
+		$article = DataObject::get_by_id( 'NewsletterArticle', $_REQUEST['ID'] );
+    	return $article->getNewsletterArticleEditForm();
     }
 
     public function TypeEditForm() {
@@ -730,8 +738,12 @@ class NewsletterAdmin extends LeftAndMain {
 		// Both the Newsletter type and the Newsletter draft call save() when "Save" button is clicked
 		// @todo this is a hack. It needs to be cleaned up. Two different classes shouldn't share the
 		// same submit handler since they have different behaviour!
+		$type = $_REQUEST['Type'];
 		if(isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Newsletter') {
 			return $this->savenewsletter($params, $form);
+		}
+		if(isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Article') {
+			return $this->savearticle($params, $form);
 		}
 
 		$id = $_REQUEST['ID'];
@@ -784,6 +796,13 @@ class NewsletterAdmin extends LeftAndMain {
 			$actionList .= $action->Field() . ' ';
 		}
 		FormResponse::add("$('Form_EditForm').loadActionsFromString('" . Convert::raw2js($actionList) . "');");
+		return FormResponse::respond();
+	}
+	
+	public function savearticle( $urlparams, $form ) {
+		$article = DataObject::get_by_id( 'NewsletterArticle', $_REQUEST['ID'] );
+		$form->saveInto( $article );
+		$article->write();
 		return FormResponse::respond();
 	}
 
@@ -927,9 +946,7 @@ JS;
 			return $message;
 		}
 
-		$article = new NewsletterArticle();
-		$article->NewsletterID = $newsletter->ID;
-		$article->write();
+		$article = $newsletter->createArticle();
 		$form = $article->getNewsletterArticleEditForm();
 		return $this->showWithEditForm( $request->allParams() , $form );
 //		return new SS_HTTPResponse(

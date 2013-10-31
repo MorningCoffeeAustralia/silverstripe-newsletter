@@ -1,5 +1,6 @@
 if(typeof SiteTreeHandlers == 'undefined') SiteTreeHandlers = {};
 SiteTreeHandlers.showNLDraft_url = 'admin/newsletter/shownewsletter/';
+SiteTreeHandlers.showNLArticle_url = 'admin/newsletter/showarticle/';
 SiteTreeHandlers.showNLType_url = 'admin/newsletter/showtype/';
 SiteTreeHandlers.controller_url = 'admin/newsletter';
 
@@ -22,7 +23,8 @@ SiteTree.prototype = {
 		this.observeMethod('SelectionChanged', this.changeCurrentTo);	
 	},
 	
-	createTreeNode : function(idx, title, pageType, secondIdx) {
+	//ID, DBID, TITLE, CLASS/TYPE, PARENT
+	createTreeNode : function(idx, title, pageType, DBID) {
 		var i;
 		var node = document.createElement('li');
 		node.className = pageType;
@@ -31,10 +33,16 @@ SiteTree.prototype = {
 		
 		node.id = idx;
 		
-		if( pageType == 'Draft' ) {
-			aTag.href = SiteTreeHandlers.showNLDraft_url + idx;
-		} else {
-			aTag.href = SiteTreeHandlers.showNLType_url + idx;	
+		switch (pageType) {
+			case 'Article':
+				aTag.href = SiteTreeHandlers.showNLArticle_url + DBID;
+				break;
+			case 'Draft':
+				aTag.href = SiteTreeHandlers.showNLDraft_url + DBID;
+				break;
+			case 'Type':
+				aTag.href = SiteTreeHandlers.showNLType_url + DBID;
+				break;
 		}
 		
 		aTag.innerHTML = title;
@@ -48,7 +56,8 @@ SiteTree.prototype = {
 	addArticleNode: function(title, parentID, draftID) {
 		console.log(title, parentID, draftID);
 		var st = $('sitetree');
-		var draftNode = this.createTreeNode( 'article_' + draftID, 'Node title', 'Draft', parentID );
+//		alert(draftID);//draft_1_41
+		var draftNode = this.createTreeNode( 'article_' + draftID, 'Node title', 'Article', draftID );
 		this.getTreeNodeByIdx(parentID).appendTreeNode( draftNode );
 		this.changeCurrentTo( draftNode );
 	},
@@ -81,7 +90,7 @@ SiteTree.prototype = {
 		this.appendTreeNode( typeNode );	
 		this.changeCurrentTo( typeNode );
 		// Change the 'Create...' drop-down to 'Add a draft' since this will be the logical next action after a Newsletter type is created
-		$('add_type').value = 'draft';
+//		$('add_type').value = 'draft';
 	}
 }
 
@@ -201,7 +210,7 @@ deletedraft = {
 
 SiteTreeNode.prototype.onselect = function() {
 	// Change the 'Create...' drop-down to 'Add a draft' whenever a selection is made in the left tree
-	$('add_type').value = 'draft';
+//	$('add_type').value = 'draft';
 	$('sitetree').changeCurrentTo(this);
 	if($('sitetree').notify('SelectionChanged', this)) {
 		autoSave(true, this.getPageFromServer.bind(this));// prototype error: Refused to set unsafe header "Connection" 
@@ -280,20 +289,20 @@ AddForm.applyTo('#addtype');
 AddForm.prototype = {
   initialize: function () {
 		Observable.applyTo($(_HANDLER_FORMS[this.id]));
-		this.getElementsByTagName('button')[0].onclick = function() {
-			var st = $('sitetree');
-			if (st) {
-				// Select 'Add new draft' if the left tree is not empty, 
-				// because, most likely, the user will want to add a new draft if they already have a newsletter type
-				if (typeof st.lastTreeNode() != 'undefined') {
-					$('add_type').value = 'draft';
-				} else {
-					$('add_type').value = 'type';
-				}
-			} else {
-				$('add_type').value = 'type';
-			}
-		}
+//		this.getElementsByTagName('button')[0].onclick = function() {
+//			var st = $('sitetree');
+//			if (st) {
+//				// Select 'Add new draft' if the left tree is not empty, 
+//				// because, most likely, the user will want to add a new draft if they already have a newsletter type
+//				if (typeof st.lastTreeNode() != 'undefined') {
+//					$('add_type').value = 'draft';
+//				} else {
+//					$('add_type').value = 'type';
+//				}
+//			} else {
+//				$('add_type').value = 'type';
+//			}
+//		}
 		$(_HANDLER_FORMS[this.id]).onsubmit = this.form_submit;
 	},
 
@@ -341,6 +350,7 @@ AddForm.prototype = {
 						// create a new node and add it to the site tree
 						switch (type) {
 							case 'article':
+								formID = $('#Form_NewsletterArticleEditForm_ID').val();
 								st.addArticleNode('New newsletter article', selectedNode.id, formID);
 								break;
 							case 'draft':
@@ -372,18 +382,18 @@ AddForm.prototype = {
   },
 	
   button_onclick : function() {
-		if(treeactions.toggleSelection(this)) {
-			var selectedNode = $('sitetree').firstSelected();
-			if(selectedNode) {
-				while(selectedNode.parentTreeNode && !selectedNode.hints.defaultChild) {
-					$('sitetree').changeCurrentTo(selectedNode.parentTreeNode);
-					selectedNode = selectedNode.parentTreeNode;
-				}
-			}
-						
-			this.o1 = $('sitetree').observeMethod('SelectionChanged', this.treeSelectionChanged.bind(this));
-			this.o2 = $(_HANDLER_FORMS[this.id]).observeMethod('Close', this.popupClosed.bind(this));
-		}
+//		if(treeactions.toggleSelection(this)) {
+//			var selectedNode = $('sitetree').firstSelected();
+//			if(selectedNode) {
+//				while(selectedNode.parentTreeNode && !selectedNode.hints.defaultChild) {
+//					$('sitetree').changeCurrentTo(selectedNode.parentTreeNode);
+//					selectedNode = selectedNode.parentTreeNode;
+//				}
+//			}
+//						
+//			this.o1 = $('sitetree').observeMethod('SelectionChanged', this.treeSelectionChanged.bind(this));
+//			this.o2 = $(_HANDLER_FORMS[this.id]).observeMethod('Close', this.popupClosed.bind(this));
+//		}
 		return false;
 	},
 

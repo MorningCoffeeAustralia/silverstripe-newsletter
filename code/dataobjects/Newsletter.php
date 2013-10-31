@@ -7,20 +7,20 @@
 class Newsletter extends DataObject {
 
 	static $db = array(
-		"Status" => "Enum('Draft, Send', 'Draft')",
-		"Content" => "HTMLText",
-		"Subject" => "Varchar(255)",
-		"SentDate" => "Datetime"
+		'Status' => "Enum('Draft, Send', 'Draft')",
+		'Subject' => 'Varchar(255)',
+		'SentDate' => 'Datetime'
 	);
 
 	static $has_one = array(
-		"Parent" => "NewsletterType",
+		'Parent' => 'NewsletterType',
 	);
 
 	static $has_many = array(
-		"Recipients" => "Newsletter_Recipient",
-		"SentRecipients" => "Newsletter_SentRecipient",
-		"TrackedLinks" => "Newsletter_TrackedLink"
+		'Articles' => 'NewsletterArticle',
+		'Recipients' => 'Newsletter_Recipient',
+		'SentRecipients' => 'Newsletter_SentRecipient',
+		'TrackedLinks' => 'Newsletter_TrackedLink'
 	);
 
 	/**
@@ -35,23 +35,31 @@ class Newsletter extends DataObject {
 		$group = DataObject::get_by_id("Group", $this->Parent()->GroupID);
 		$sentReport = $this->renderWith("Newsletter_SentStatusReport");
 		$previewLink = Director::absoluteBaseURL() . 'admin/newsletter/preview/' . $this->ID;
-		$trackedLinks = $this->renderWith("Newsletter_TrackedLinksReport");
-
+		Requirements::css(SAPPHIRE_DIR . '/css/TableListField.css'); // styles for $sentReport
 		$ret = new FieldSet(
 			new TabSet("Root",
 				$mailTab = new Tab(_t('Newsletter.NEWSLETTER', 'Newsletter'),
 					new TextField("Subject", _t('Newsletter.SUBJECT', 'Subject'), $this->Subject),
-					new HtmlEditorField("Content", _t('Newsletter.CONTENT', 'Content')),
-					new LiteralField('PreviewNewsletter', "<a href=\"$previewLink\" target=\"_blank\">" . _t('PREVIEWNEWSLETTER', 'Preview this newsletter') . "</a>")
+					new LiteralField('PreviewNewsletter', "<p><a href=\"$previewLink\" target=\"_blank\">" . _t('PREVIEWNEWSLETTER', 'Preview this newsletter') . "</a></p>")
 				),
 				$sentToTab = new Tab(_t('Newsletter.SENTREPORT', 'Sent Status Report'),
 					new LiteralField("SentStatusReport", $sentReport)
 				),
-				$trackLink = new Tab(_t('Newsletter.TRACKEDLINKS', 'Tracked Links'),
-					new LiteralField("TrackedLinks", $trackedLinks)
-				)
+				$tracked = new Tab('TrackedLinks', $trackedTable = new TableListField(
+					'TrackedLinks',
+					'Newsletter_TrackedLink',
+					array(
+						'Original' => 'Link',
+						'Visits'   => 'Visits'
+					),
+					'"NewsletterID" = ' . $this->ID,
+					'"Visits" DESC'
+				))
 			)
 		);
+
+		$tracked->setTitle(_t('Newsletter.TRACKEDLINKS', 'Tracked Links'));
+		$trackedTable->setPermissions(array('show'));
 
 		if($this->Status != 'Draft') {
 			$mailTab->push( new ReadonlyField("SentDate", _t('Newsletter.SENTAT', 'Sent at'), $this->SentDate) );
@@ -62,6 +70,38 @@ class Newsletter extends DataObject {
 	}
 
 	/**
+	 * @return FieldSet
+	 */
+	public function getCMSActions() {
+		$actions = new FieldSet();
+
+		if ($this->SentDate) {
+			$actions->push(new FormAction('send', _t('Newsletter.RESEND', 'Resend')));
+		} else {
+			$actions->push(new FormAction('send', _t('Newsletter.SEND','Send...')));
+		}
+
+		$actions->push(new FormAction('save',_t('Newsletter.SAVE', 'Save')));
+
+		$this->extend('updateCMSActions', $actions);
+		return $actions;
+	}
+
+	/**
+	 * Creates a blank article and associates it with this newsletter
+	 *
+	 * @return Article
+	 */
+	public function createArticle() {
+		$article = new NewsletterArticle;
+		$article->NewsletterID = $this->ID;
+		$article->Title = 'New article';
+		$article->write();
+
+		return $article;
+	}
+
+	/**
 	 * Returns a DataObject listing the recipients for the given status for this newsletter
 	 *
 	 * @param string $result 3 possible values: "Sent", (mail() returned TRUE), "Failed" (mail() returned FALSE), or "Bounced" ({@see $email_bouncehandler}).
@@ -69,7 +109,7 @@ class Newsletter extends DataObject {
 	 */
 	function SentRecipients($result) {
 		$SQL_result = Convert::raw2sql($result);
-		return DataObject::get("Newsletter_SentRecipient",array("ParentID='".$this->ID."'", "Result='".$SQL_result."'"));
+		return DataObject::get("Newsletter_SentRecipient",array("\"ParentID\"='".$this->ID."'", "\"Result\"='".$SQL_result."'"));
 	}
 
 	/**
@@ -79,7 +119,7 @@ class Newsletter extends DataObject {
 	 */
 	function UnsentSubscribers() {
 		// Get a list of everyone who has been sent this newsletter
-		$sent_recipients = DataObject::get("Newsletter_SentRecipient","ParentID='".$this->ID."'");
+		$sent_recipients = DataObject::get("Newsletter_SentRecipient","\"ParentID\"='".$this->ID."'");
 		// If this Newsletter has not been sent to anyone yet, $sent_recipients will be null
 		if ($sent_recipients != null) {
 			$sent_recipients_array = $sent_recipients->toNestedArray('MemberID');
@@ -144,21 +184,7 @@ class Newsletter extends DataObject {
 	function PreviewLink(){
 		return Controller::curr()->AbsoluteLink()."preview/".$this->ID;
 	}
-	/** 
-	 * Returns a list of all the {@link Newsletter_TrackedLink} objects attached 
-	 * to this newsletter and sorts them in desc order 
-	 * 
-	 * @return DataObjectSet|false 
-	 */ 
-	function NewsletterLinks() { 
-		$links = $this->TrackedLinks(); 
-		
- 		if($links) { 
-			$links->sort("\"Visits\"", "DESC"); 
-			
-			return $links; 
-		} 
-	}
+
 }
 
 /**
@@ -232,5 +258,20 @@ class Newsletter_TrackedLink extends DataObject {
 		if(!$this->Hash) $this->write();
 		
 		return 'newsletterlinks/'. $this->Hash;
+	}
+
+	function UnsubscribeLink(){
+		$emailAddr = $this->To();
+		$member=DataObject::get_one("Member", "Email = '".$emailAddr."'");
+		if($member){
+			if($member->AutoLoginHash){
+				$member->AutoLoginExpired = date('Y-m-d', time() + (86400 * 2));
+				$member->write();
+			}else{
+				$member->generateAutologinHash();
+			}
+			$nlTypeID = $this->nlType->ID;
+			return Director::absoluteBaseURL() . "unsubscribe/index/".$member->AutoLoginHash."/$nlTypeID";
+		}
 	}
 }
