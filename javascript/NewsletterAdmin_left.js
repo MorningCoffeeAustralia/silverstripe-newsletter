@@ -350,7 +350,6 @@ AddForm.prototype = {
 						// create a new node and add it to the site tree
 						switch (type) {
 							case 'article':
-								formID = $('#Form_NewsletterArticleEditForm_ID').val();
 								st.addArticleNode('New newsletter article', selectedNode.id, formID);
 								break;
 							case 'draft':

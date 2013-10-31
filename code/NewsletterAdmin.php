@@ -292,7 +292,7 @@ class NewsletterAdmin extends LeftAndMain {
     }
 
     public function ArticleEditForm() {
-    	return $article->getArticleEditForm( $_REQUEST['ID'] );
+    	return $this->getArticleEditForm( $_REQUEST['ID'] );
     }
 
     public function TypeEditForm() {
@@ -415,7 +415,7 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 	
 	// getNewsletterArticleEditForm
-	public function getArticleEditForm( $id ) {
+		public function getArticleEditForm( $id ) {
 		$article = DataObject::get_by_id( 'NewsletterArticle', $id );
 		
 		$fields = $article->getCMSFields();
@@ -968,7 +968,7 @@ JS;
 		}
 
 		$article = $newsletter->createArticle();
-		$form = $article->getArticleEditForm( $article->ID );
+		$form = $this->getArticleEditForm( $article->ID );
 		return $this->showWithEditForm( $request->allParams() , $form );
 //		return new SS_HTTPResponse(
 //			Convert::array2json(
