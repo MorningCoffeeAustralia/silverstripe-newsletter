@@ -105,12 +105,16 @@ class NewsletterAdmin extends LeftAndMain {
 
 		$count = 0;
 		foreach( $ids as $id ) {
+			
+			$record = null;
 			if( preg_match( '/^mailtype_(\d+)$/', $id, $matches ) )
 				$record = DataObject::get_by_id( 'NewsletterType', $matches[1] );
 			else if( preg_match( '/^[a-z]+_\d+_(\d+)$/', $id, $matches ) )
 				$record = DataObject::get_by_id( 'Newsletter', $matches[1] );
+			else if( preg_match( '/^article_(\d+)$/', $id, $matches ) )
+				$record = DataObject::get_by_id( 'NewsletterArticle', $matches[1] );
 
-			if($record) {
+			if( $record ) {
 				$record->delete();
 			}
 

@@ -158,7 +158,7 @@ deletedraft = {
 		}
 		
 		if(csvIDs) {
-			if(confirm("Do you really want to these Newsletter items?")) {
+			if(confirm("Do you really want to delete these Newsletter items?")) {
 				$('deletedrafts_options').elements.csvIDs.value = csvIDs;
 	
 				Ajax.SubmitForm('deletedrafts_options', null, {
@@ -422,12 +422,6 @@ Behaviour.addLoader(function () {
 	// Set up add draft
 	Observable.applyTo($('addtype_options'));
 	
-	if( $('addtype') ) {
-		if( AddForm.button_click )
-		$('addtype').getElementsByTagName('a')[0].onclick = function() {return false;};
-		if( AddForm.button_click )
-			$('addtype_options').onsubmit = AddForm.form_submit;
-	}
 	// Set up delete drafts
 	Observable.applyTo($('deletedrafts_options'));
 	
