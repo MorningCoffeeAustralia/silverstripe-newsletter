@@ -421,8 +421,10 @@ class NewsletterAdmin extends LeftAndMain {
 		$fields = $article->getCMSFields();
 		
 		// add some extra fields used by LeftAndMain
+		$fields->removeByName("Image");
 		$fields->addFieldToTab( 'Root.Main', new HiddenField( "ID","ID", $id ) );
 		$fields->addFieldToTab( 'Root.Main', new HiddenField( 'Type', 'Type', 'Article' ) );
+		$fields->addFieldToTab( 'Root.Main', new LiteralField('ImageUpload', '<iframe name="Image_iframe" src="admin/newsletterarticle/NewsletterArticle/' . $id . '/EditForm/field/Image/iframe" style="height: 152px; width: 100%; border: none;"></iframe>' ) );
 		
 		$actions = new FieldSet(new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save')));
 		
