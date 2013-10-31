@@ -209,12 +209,7 @@ class NewsletterAdmin extends LeftAndMain {
 	public function showarticle($params) {
 		$params = $params->allParams();
 		
-		$article = DataObject::get_by_id('NewsletterArticle', $params['ID']);
-		
-		$actions = new FieldSet(new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save')));
-		$form = new Form($this, "TypeEditForm", $article->getCMSFields(), $actions);
-		
-		$form = $article->getNewsletterArticleEditForm();
+		$form = $this->getArticleEditForm( $params['ID'] );
 		
 		return $this->showWithEditForm( $params, $form );
 	}
@@ -297,9 +292,7 @@ class NewsletterAdmin extends LeftAndMain {
     }
 
     public function ArticleEditForm() {
-		// dispensing of the pleasantries and just assuming id is valid
-		$article = DataObject::get_by_id( 'NewsletterArticle', $_REQUEST['ID'] );
-    	return $article->getNewsletterArticleEditForm();
+    	return $article->getArticleEditForm( $_REQUEST['ID'] );
     }
 
     public function TypeEditForm() {
@@ -416,6 +409,32 @@ class NewsletterAdmin extends LeftAndMain {
 				new LiteralField('GroupWarning', _t('NewsletterAdmin.NO_GROUP', 'No mailing group selected'))
 			);
 			$form = new Form($this, "MailingListEditForm", $fields, new FieldSet());
+		}
+
+		return $form;
+	}
+	
+	// getNewsletterArticleEditForm
+	public function getArticleEditForm( $id ) {
+		$article = DataObject::get_by_id( 'NewsletterArticle', $id );
+		
+		$fields = $article->getCMSFields();
+		
+		// add some extra fields used by LeftAndMain
+		$fields->addFieldToTab( 'Root.Main', new HiddenField( "ID","ID", $id ) );
+		$fields->addFieldToTab( 'Root.Main', new HiddenField( 'Type', 'Type', 'Article' ) );
+		
+		$actions = new FieldSet(new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save')));
+		
+		// keeping form name as EditForm
+		// this hooks into the NewsletterAdmin_right.js to tigger saves
+		$form = new Form($this, "EditForm", $fields, $actions);
+		$form->loadDataFrom($article);
+		
+		$newsletter = $article->Newsletter();
+		if($newsletter->Status != 'Draft') {
+			$readonlyFields = $form->Fields()->makeReadonly();
+			$form->setFields($readonlyFields);
 		}
 
 		return $form;
@@ -801,7 +820,9 @@ class NewsletterAdmin extends LeftAndMain {
 	
 	public function savearticle( $urlparams, $form ) {
 		$article = DataObject::get_by_id( 'NewsletterArticle', $_REQUEST['ID'] );
+		$article->Body = $urlparams['Body'];
 		$form->saveInto( $article );
+		
 		$article->write();
 		return FormResponse::respond();
 	}
@@ -947,7 +968,7 @@ JS;
 		}
 
 		$article = $newsletter->createArticle();
-		$form = $article->getNewsletterArticleEditForm();
+		$form = $article->getArticleEditForm( $article->ID );
 		return $this->showWithEditForm( $request->allParams() , $form );
 //		return new SS_HTTPResponse(
 //			Convert::array2json(
