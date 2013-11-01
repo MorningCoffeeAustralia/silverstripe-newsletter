@@ -13,5 +13,5 @@ class NewsletterArticle extends DataObject {
 	public static $defaults = array(
 		'Title' => 'New Article'
 	);
-
+	
 }

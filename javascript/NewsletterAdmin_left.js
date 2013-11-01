@@ -57,7 +57,7 @@ SiteTree.prototype = {
 		console.log(title, parentID, draftID);
 		var st = $('sitetree');
 //		alert(draftID);//draft_1_41
-		var draftNode = this.createTreeNode( 'article_' + draftID, 'Node title', 'Article', draftID );
+		var draftNode = this.createTreeNode( 'article_' + draftID, 'New article', 'Article', draftID );
 		this.getTreeNodeByIdx(parentID).appendTreeNode( draftNode );
 		this.changeCurrentTo( draftNode );
 	},
@@ -158,7 +158,7 @@ deletedraft = {
 		}
 		
 		if(csvIDs) {
-			if(confirm("Do you really want to these Newsletter items?")) {
+			if(confirm("Do you really want to delete these items?")) {
 				$('deletedrafts_options').elements.csvIDs.value = csvIDs;
 	
 				Ajax.SubmitForm('deletedrafts_options', null, {
@@ -210,7 +210,6 @@ deletedraft = {
 
 SiteTreeNode.prototype.onselect = function() {
 	// Change the 'Create...' drop-down to 'Add a draft' whenever a selection is made in the left tree
-//	$('add_type').value = 'draft';
 	$('sitetree').changeCurrentTo(this);
 	if($('sitetree').notify('SelectionChanged', this)) {
 		autoSave(true, this.getPageFromServer.bind(this));// prototype error: Refused to set unsafe header "Connection" 
@@ -289,20 +288,6 @@ AddForm.applyTo('#addtype');
 AddForm.prototype = {
   initialize: function () {
 		Observable.applyTo($(_HANDLER_FORMS[this.id]));
-//		this.getElementsByTagName('button')[0].onclick = function() {
-//			var st = $('sitetree');
-//			if (st) {
-//				// Select 'Add new draft' if the left tree is not empty, 
-//				// because, most likely, the user will want to add a new draft if they already have a newsletter type
-//				if (typeof st.lastTreeNode() != 'undefined') {
-//					$('add_type').value = 'draft';
-//				} else {
-//					$('add_type').value = 'type';
-//				}
-//			} else {
-//				$('add_type').value = 'type';
-//			}
-//		}
 		$(_HANDLER_FORMS[this.id]).onsubmit = this.form_submit;
 	},
 
@@ -374,28 +359,17 @@ AddForm.prototype = {
 		return false;
 	},
 	
-  reloadSiteTree: function( response ) {
-	statusMessage('Added new newsletter type', 'good' );
-	$('sitetree_holder').innerHTML = response.responseText;
-	Behaviour.apply( $('sitetree_holder') );
-  },
-	
-  button_onclick : function() {
-//		if(treeactions.toggleSelection(this)) {
-//			var selectedNode = $('sitetree').firstSelected();
-//			if(selectedNode) {
-//				while(selectedNode.parentTreeNode && !selectedNode.hints.defaultChild) {
-//					$('sitetree').changeCurrentTo(selectedNode.parentTreeNode);
-//					selectedNode = selectedNode.parentTreeNode;
-//				}
-//			}
-//						
-//			this.o1 = $('sitetree').observeMethod('SelectionChanged', this.treeSelectionChanged.bind(this));
-//			this.o2 = $(_HANDLER_FORMS[this.id]).observeMethod('Close', this.popupClosed.bind(this));
-//		}
+	onclick : function() {
+			if(treeactions.toggleSelection(this)) {
+						
+			this.o1 = $('sitetree').observeMethod('SelectionChanged', this.treeSelectionChanged.bind(this));
+			this.o2 = $(_HANDLER_FORMS[this.id]).observeMethod('Close', this.popupClosed.bind(this));
+
+			$(_HANDLER_FORMS[this.id]).elements.PageType.onchange = this.typeDropdown_change;
+		}
 		return false;
 	},
-
+	
   treeSelectionChanged: function( treeNode ) {
 	this.selected = treeNode;
   },
@@ -422,12 +396,6 @@ Behaviour.addLoader(function () {
 	// Set up add draft
 	Observable.applyTo($('addtype_options'));
 	
-	if( $('addtype') ) {
-		if( AddForm.button_click )
-		$('addtype').getElementsByTagName('a')[0].onclick = function() {return false;};
-		if( AddForm.button_click )
-			$('addtype_options').onsubmit = AddForm.form_submit;
-	}
 	// Set up delete drafts
 	Observable.applyTo($('deletedrafts_options'));
 	
