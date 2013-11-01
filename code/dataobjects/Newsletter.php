@@ -178,11 +178,21 @@ class Newsletter extends DataObject {
 	    } else {
 	        user_error( $parentID, E_USER_ERROR );
 	    }
-    	return $newsletter;
+    	return $newsletter; 
   	}
 	
 	function PreviewLink(){
 		return Controller::curr()->AbsoluteLink()."preview/".$this->ID;
+	}
+	
+	public function onBeforeDelete() {
+		parent::onBeforeDelete();
+		if( $this->Articles() ) {
+			foreach( $this->Articles() as $article ) {
+				$article->delete();
+				$article->destroy();
+			}	
+		}
 	}
 
 }

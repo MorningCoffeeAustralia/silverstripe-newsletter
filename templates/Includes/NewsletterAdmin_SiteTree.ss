@@ -8,7 +8,7 @@
 				<% if DraftNewsletters %>
 					<ul>
 						<% control DraftNewsletters %>
-						<li class="Draft nodelete closed" id="draft_{$ParentID}_{$ID}"><a href="$baseURL/admin/newsletter/shownewsletter/$ID">$Title</a>
+						<li class="Draft closed" id="draft_{$ParentID}_{$ID}"><a href="$baseURL/admin/newsletter/shownewsletter/$ID">$Title</a>
 						<% if Articles %>
 						<ul>
 						<% control Articles %>
