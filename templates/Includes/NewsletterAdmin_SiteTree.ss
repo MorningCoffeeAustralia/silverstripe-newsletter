@@ -8,12 +8,20 @@
 				<% if DraftNewsletters %>
 					<ul>
 						<% control DraftNewsletters %>
-						<li class="Draft" id="draft_{$ParentID}_{$ID}"><a href="$baseURL/admin/newsletter/shownewsletter/$ID">$Title</a></li>
+						<li class="Draft closed" id="draft_{$ParentID}_{$ID}"><a href="$baseURL/admin/newsletter/shownewsletter/$ID">$Title</a>
+						<% if Articles %>
+						<ul>
+						<% control Articles %>
+						<li class="Article" id="article_{$ID}"><a href="$baseURL/admin/newsletter/showarticle/{$ID}">{$Title}</a></li>
+						<% end_control %>
+						</ul>
+						<% end_if %>
+						</li>
 						<% end_control %>
 					</ul>
 				<% end_if %>
 				</li>
-				<li id="sent_$ID" class="SentFolder nodelete closed"><a href="$baseURL/admin/showtype/$ID"><% _t('SENT','Sent Items') %></a>
+				<li id="sent_$ID" class="SentFolder nodelete closed"><a href="$baseURL/admin/showtype/$ID"><% _t('SENT','Sent Items') %></a>	
 				<% if SentNewsletters %>
                     <ul>
 						<% if MostRecentSentNewsletters %>
