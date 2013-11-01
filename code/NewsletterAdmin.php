@@ -585,12 +585,6 @@ class NewsletterAdmin extends LeftAndMain {
 		return $templates;
 	}
 
-	/* Does not seem to be used
-	public function showdraft( $params ) {
-        	return $this->showWithEditForm( $params, $this->getNewsletterEditForm( $params['ID'] ) );
-	}
-	*/
-
 	public function getNewsletterEditForm($myId){
 		$email = DataObject::get_by_id("Newsletter", $myId);
 
