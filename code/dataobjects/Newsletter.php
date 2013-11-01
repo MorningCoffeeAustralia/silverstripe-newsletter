@@ -7,20 +7,21 @@
 class Newsletter extends DataObject {
 
 	static $db = array(
-		'Status' => "Enum('Draft, Send', 'Draft')",
-		'Subject' => 'Varchar(255)',
-		'SentDate' => 'Datetime'
+		'Status'		=> "Enum('Draft, Send', 'Draft')",
+		'Subject'		=> 'Varchar(255)',
+		'Content'		=> 'Text',
+		'SentDate'		=> 'Datetime'
 	);
 
 	static $has_one = array(
-		'Parent' => 'NewsletterType',
+		'Parent'		=> 'NewsletterType',
 	);
 
 	static $has_many = array(
-		'Articles' => 'NewsletterArticle',
-		'Recipients' => 'Newsletter_Recipient',
-		'SentRecipients' => 'Newsletter_SentRecipient',
-		'TrackedLinks' => 'Newsletter_TrackedLink'
+		'Articles'			=> 'NewsletterArticle',
+		'Recipients'		=> 'Newsletter_Recipient',
+		'SentRecipients'	=> 'Newsletter_SentRecipient',
+		'TrackedLinks'		=> 'Newsletter_TrackedLink'
 	);
 
 	/**
@@ -40,6 +41,7 @@ class Newsletter extends DataObject {
 			new TabSet("Root",
 				$mailTab = new Tab(_t('Newsletter.NEWSLETTER', 'Newsletter'),
 					new TextField("Subject", _t('Newsletter.SUBJECT', 'Subject'), $this->Subject),
+					new TextareaField( 'Content', 'Content', $this->Content ),
 					new LiteralField('PreviewNewsletter', "<p><a href=\"$previewLink\" target=\"_blank\">" . _t('PREVIEWNEWSLETTER', 'Preview this newsletter') . "</a></p>")
 				),
 				$sentToTab = new Tab(_t('Newsletter.SENTREPORT', 'Sent Status Report'),

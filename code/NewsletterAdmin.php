@@ -763,7 +763,7 @@ class NewsletterAdmin extends LeftAndMain {
 		// Both the Newsletter type and the Newsletter draft call save() when "Save" button is clicked
 		// @todo this is a hack. It needs to be cleaned up. Two different classes shouldn't share the
 		// same submit handler since they have different behaviour!
-		$type = $_REQUEST['Type'];
+//		$type = $_REQUEST['Type'];
 		if(isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Newsletter') {
 			return $this->savenewsletter($params, $form);
 		}
@@ -809,6 +809,7 @@ class NewsletterAdmin extends LeftAndMain {
 		$type = $record->getNewsletterType();
 
 		$form->saveInto($record);
+		$record->Content = $urlParams['Content'];
 		$record->write();
 
 		$id = 'draft_'.$record->ParentID.'_'.$record->ID;
