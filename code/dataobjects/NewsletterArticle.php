@@ -2,7 +2,7 @@
 class NewsletterArticle extends DataObject {
 	public static $db = array(
 		'Title' => 'Varchar(100)',
-		'Body' => 'Text'
+		'Body' => 'HTMLText'
 	);
 
 	public static $has_one = array (
