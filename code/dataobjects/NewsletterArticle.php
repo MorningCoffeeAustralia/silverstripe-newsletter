@@ -14,4 +14,8 @@ class NewsletterArticle extends DataObject {
 		'Title' => 'New Article'
 	);
 	
+	public function getLabel() {
+		return $this->Title ? $this->Title : "(Article)";
+	}
+	
 }

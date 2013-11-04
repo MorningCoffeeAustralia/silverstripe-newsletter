@@ -12,7 +12,8 @@
 						<% if Articles %>
 						<ul>
 						<% control Articles %>
-						<li class="Article" id="article_{$ID}"><a href="$baseURL/admin/newsletter/showarticle/{$ID}">{$Title}</a></li>
+						<%-- using label here rather than title, title may not always be in use on the article --%>
+						<li class="Article" id="article_{$ID}"><a href="$baseURL/admin/newsletter/showarticle/{$ID}">{$Label}</a></li>
 						<% end_control %>
 						</ul>
 						<% end_if %>

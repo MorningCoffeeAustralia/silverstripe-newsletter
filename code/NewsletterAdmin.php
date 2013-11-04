@@ -803,6 +803,7 @@ class NewsletterAdmin extends LeftAndMain {
 		$type = $record->getNewsletterType();
 
 		$form->saveInto($record);
+		$record->Subject = $urlParams['Subject'];
 		$record->Content = $urlParams['Content'];
 		$record->write();
 
@@ -821,6 +822,7 @@ class NewsletterAdmin extends LeftAndMain {
 	
 	public function savearticle( $urlparams, $form ) {
 		$article = DataObject::get_by_id( 'NewsletterArticle', $_REQUEST['ID'] );
+		$article->Title = $urlparams['Title'];
 		$article->Body = $urlparams['Body'];
 		$form->saveInto( $article );
 		
