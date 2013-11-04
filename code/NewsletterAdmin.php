@@ -243,10 +243,10 @@ class NewsletterAdmin extends LeftAndMain {
 	/**
 	 * This function is called only internally, so make sure that $params is not a SS_HTTPRequest from caller.
 	 */
-    private function showWithEditForm( $params, $editForm ) {
-        if(isset($params['ID'])) {
+	private function showWithEditForm( $params, $editForm ) {
+		if(isset($params['ID'])) {
 			$this->setCurrentPageID($params['ID']);
-        }
+		}
 		if(isset($params['OtherID'])) {
 			Session::set('currentMember', $params['OtherID']);
 		}
@@ -256,73 +256,72 @@ class NewsletterAdmin extends LeftAndMain {
 		} else {
 			return array('EditForm' => $editForm);
 		}
-    }
+	}
 
-    public function getEditForm( $id ) {
-        $form = $this->getNewsletterTypeEditForm( $id );
+	public function getEditForm( $id ) {
+		$form = $this->getNewsletterTypeEditForm( $id );
 		$form->disableDefaultAction();
 		return $form;
-    }
+	}
 
-    /**
-     * Get the EditForm
-     */
-    public function EditForm() {
+	/**
+	 * Get the EditForm
+	 */
+	public function EditForm() {
 		// Include JavaScript to ensure HtmlEditorField works.
 		HtmlEditorField::include_js();
-    	if((isset($_REQUEST['ID']) && isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Newsletter') || isset($_REQUEST['action_savenewsletter'])) {
-    		$form = $this->ArticleEditForm();
+		if((isset($_REQUEST['ID']) && isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Newsletter') || isset($_REQUEST['action_savenewsletter'])) {
+			$form = $this->NewsletterEditForm();
 		} elseif((isset($_REQUEST['ID']) && isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Article') ) {
-    		$form = $this->NewsletterEditForm();
-    	} else {
-
+			$form = $this->ArticleEditForm();
+		} else {
 			// If a mailing list member is being added to a group, then call the Recipient form
 			if((isset($_REQUEST['fieldName']) && 'Recipients' == $_REQUEST['fieldName']) || (!empty($_REQUEST['MemberSearch']))) {
 				$form = $this->MailingListEditForm();
 			} else {
 				$form = $this->TypeEditForm();
 			}
-    	}
+		}
 		if($form) $form->disableDefaultAction();
 		return $form;
 	}
 
-    public function NewsletterEditForm() {
-    	$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $this->currentPageID();
-    	if(!is_numeric($id)) {
-    		$id = 0;
-    	}
-    	return $this->getNewsletterEditForm($id);
-    }
+	public function NewsletterEditForm() {
+		$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $this->currentPageID();
+		if(!is_numeric($id)) {
+			$id = 0;
+		}
+		return $this->getNewsletterEditForm($id);
+	}
 
-    public function ArticleEditForm() {
-    	return $this->getArticleEditForm( $_REQUEST['ID'] );
-    }
+	public function ArticleEditForm() {
+		return $this->getArticleEditForm( $_REQUEST['ID'] );
+	}
 
-    public function TypeEditForm() {
-    	$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $this->currentPageID();
-    	if(!is_numeric($id)) {
-    		$id = 0;
-    	}
-    	return $this->getNewsletterTypeEditForm($id);
-    }
-    public function MailingListEditForm() {
-    	$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $this->currentPageID();
-    	return $this->getMailingListEditForm($id);
-    }
+	public function TypeEditForm() {
+		$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $this->currentPageID();
+		if(!is_numeric($id)) {
+			$id = 0;
+		}
+		return $this->getNewsletterTypeEditForm($id);
+	}
+	public function MailingListEditForm() {
+		$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $this->currentPageID();
+		return $this->getMailingListEditForm($id);
+	}
 
 	public function getNewsletterTypeEditForm($id) {
-        if(!is_numeric($id)) {
+		if(!is_numeric($id)) {
 			$id = $this->currentPageID();
-        }
-	    if( is_a( $id, 'NewsletterType' ) ) {
-	    		$mailType = $id;
-	    		$id = $mailType->ID;
-	    } else {
-	    	if($id && is_numeric($id)) {
-	    		$mailType = DataObject::get_by_id( 'NewsletterType', $id );
-	    	}
-	    }
+		}
+		if( is_a( $id, 'NewsletterType' ) ) {
+				$mailType = $id;
+				$id = $mailType->ID;
+		} else {
+			if($id && is_numeric($id)) {
+				$mailType = DataObject::get_by_id( 'NewsletterType', $id );
+			}
+		}
 
 		if(isset($mailType) && is_object($mailType) && $mailType->GroupID) {
 			$group = DataObject::get_one("Group", "\"ID\" = $mailType->GroupID");
@@ -349,17 +348,17 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
 	public function getMailingListEditForm($id) {
-        if(!is_numeric($id)) {
-        	$id = $this->currentPageID();
+		if(!is_numeric($id)) {
+			$id = $this->currentPageID();
 		}
-	    if( is_a( $id, 'NewsletterType' ) ) {
-	    		$mailType = $id;
-	    		$id = $mailType->ID;
-	    } else {
-	    	if($id && is_numeric($id)) {
-	    		$mailType = DataObject::get_by_id( 'NewsletterType', $id );
-	    	}
-	    }
+		if( is_a( $id, 'NewsletterType' ) ) {
+				$mailType = $id;
+				$id = $mailType->ID;
+		} else {
+			if($id && is_numeric($id)) {
+				$mailType = DataObject::get_by_id( 'NewsletterType', $id );
+			}
+		}
 		$group = null;
 
 		if(isset($mailType) && is_object($mailType) && $mailType->GroupID) {
@@ -389,7 +388,7 @@ class NewsletterAdmin extends LeftAndMain {
 
 			$recipients->setController($this);
 			$importField->setController($this);
-	      	$unsubscribedList->setController($this);
+		  	$unsubscribedList->setController($this);
 			$bouncedList->setController($this);
 
 			$importField->setTypeID($id);
@@ -676,7 +675,7 @@ class NewsletterAdmin extends LeftAndMain {
 		$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $_REQUEST['NewsletterID'];
 
 		if( !$id ) {
-		        FormResponse::status_message(_t('NewsletterAdmin.NONLSPECIFIED', 'No newsletter specified'),'bad');
+				FormResponse::status_message(_t('NewsletterAdmin.NONLSPECIFIED', 'No newsletter specified'),'bad');
 			return FormResponse::respond();
 		}
 
@@ -709,7 +708,7 @@ class NewsletterAdmin extends LeftAndMain {
 				} else {
 					FormResponse::status_message(_t('NewsletterAdmin.PLEASEENTERMAIL','Please enter an email address'),'bad');
 				}
-			    break;
+				break;
 			case "List":
 				// Send to the entire mailing list.
 				$groupID = $nlType->GroupID;
@@ -725,7 +724,7 @@ class NewsletterAdmin extends LeftAndMain {
 			case "Unsent":
 				// Send to only those who have not already been sent this newsletter.
 				$only_to_unsent = 1;
-      		
+
 				echo self::sendToList( $subject, $from, $newsletter, $nlType, $messageID, $newsletter->UnsentSubscribers());
 				break;
 		}
@@ -737,7 +736,7 @@ class NewsletterAdmin extends LeftAndMain {
 	static function sendToAddress( $email, $address, $messageID = null ) {
 		$email->To = $address;
 		$email->send();
-    }
+	}
 
 	static function sendToList($subject, $from, $newsletter, $nlType, $messageID = null, $recipients) {
 		$emailProcess = new NewsletterEmailProcess($subject, $from, $newsletter, $nlType, $messageID, $recipients);
@@ -757,7 +756,7 @@ class NewsletterAdmin extends LeftAndMain {
 		// Both the Newsletter type and the Newsletter draft call save() when "Save" button is clicked
 		// @todo this is a hack. It needs to be cleaned up. Two different classes shouldn't share the
 		// same submit handler since they have different behaviour!
-//		$type = $_REQUEST['Type'];
+		$type = $_REQUEST['Type'];
 		if(isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Newsletter') {
 			return $this->savenewsletter($params, $form);
 		}
@@ -858,11 +857,11 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
   	function NewsletterAdminSiteTree() {
-      return $this->getsitetree();
+	  return $this->getsitetree();
   	}
 
   	function getsitetree() {
-      return $this->renderWith('NewsletterAdmin_SiteTree');
+	  return $this->renderWith('NewsletterAdmin_SiteTree');
   	}
 
 	/**
@@ -915,7 +914,7 @@ class NewsletterAdmin extends LeftAndMain {
 				$record = DataObject::get_one($className, "`$className`.ID = $id");
 			}
 		} else {
-            // send out an email to notify the user that they have been subscribed
+			// send out an email to notify the user that they have been subscribed
 			$record = new $className();
 		}
 
@@ -1015,19 +1014,19 @@ JS;
 		return $this->shownewsletter($params);
 	}
 
-    /**
-    * Create a new newsletter type
-    */
-    private function newNewsletterType() {
+	/**
+	* Create a new newsletter type
+	*/
+	private function newNewsletterType() {
 
-        // create the new type
-        $newsletterType = new NewsletterType();
-        $newsletterType->Title = _t('NewsletterAdmin.NEWNEWSLTYPE','New newsletter type');
-        $newsletterType->write();
+		// create the new type
+		$newsletterType = new NewsletterType();
+		$newsletterType->Title = _t('NewsletterAdmin.NEWNEWSLTYPE','New newsletter type');
+		$newsletterType->write();
 
-        // BUGFIX: Return only the ID of the new newsletter type
-        return $newsletterType->ID;
-    }
+		// BUGFIX: Return only the ID of the new newsletter type
+		return $newsletterType->ID;
+	}
 
    private function newDraft( $parentID ) {
 		if(!$parentID || !is_numeric( $parentID)) {

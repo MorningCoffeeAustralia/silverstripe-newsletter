@@ -9,7 +9,7 @@ class Newsletter extends DataObject {
 	static $db = array(
 		'Status'		=> "Enum('Draft, Send', 'Draft')",
 		'Subject'		=> 'Varchar(255)',
-		'Content'		=> 'Text',
+		'Content'		=> 'HTMLText',
 		'SentDate'		=> 'Datetime'
 	);
 
@@ -41,7 +41,7 @@ class Newsletter extends DataObject {
 			new TabSet("Root",
 				$mailTab = new Tab(_t('Newsletter.NEWSLETTER', 'Newsletter'),
 					new TextField("Subject", _t('Newsletter.SUBJECT', 'Subject'), $this->Subject),
-					new TextareaField( 'Content', 'Content', $this->Content ),
+					new HtmlEditorField('Content', 'Content', 30, 20, $this->Content),
 					new LiteralField('PreviewNewsletter', "<p><a href=\"$previewLink\" target=\"_blank\">" . _t('PREVIEWNEWSLETTER', 'Preview this newsletter') . "</a></p>")
 				),
 				$sentToTab = new Tab(_t('Newsletter.SENTREPORT', 'Sent Status Report'),
