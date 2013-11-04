@@ -287,13 +287,7 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
 	public function NewsletterEditForm() {
-		if (isset($_REQUEST['ID'])) {
-			$id = is_int($_REQUEST['ID']) ? $_REQUEST['ID'] : 0;
-		}
-		else {
-			$id = $this->currentPageID();
-		}
-
+		$id = isset($_REQUEST['ID']) ? (int) $_REQUEST['ID'] : $this->currentPageID();
 		return $this->getNewsletterEditForm($id);
 	}
 
@@ -768,7 +762,7 @@ class NewsletterAdmin extends LeftAndMain {
 			}
 		}
 
-		$id = is_int($_REQUEST['ID']) ? $_REQUEST['ID'] : 0;
+		$id = (int) $_REQUEST['ID'];
 		$className = 'NewsletterType';
 
 		$record = DataObject::get_one($className, "\"$className\".\"ID\" = $id");
@@ -789,7 +783,7 @@ class NewsletterAdmin extends LeftAndMain {
 	 * Internal call found so far.
 	 */
 	public function savenewsletter($urlParams, $form) {
-		$id = is_int($_REQUEST['ID']) ? $_REQUEST['ID'] : 0;
+		$id = (int) $_REQUEST['ID'];
 
 		$className = 'Newsletter';
 		$record = DataObject::get_one($className, "\"$className\".\"ID\" = $id");
