@@ -823,6 +823,7 @@ class NewsletterAdmin extends LeftAndMain {
 			$actionList .= $action->Field() . ' ';
 		}
 		FormResponse::add("$('Form_EditForm').loadActionsFromString('" . Convert::raw2js($actionList) . "');");
+		FormResponse::set_node_title( 'article_' . $article->ID, $article->Title);
 		FormResponse::status_message(_t('NewsletterAdmin.SAVED'), 'good');
 		return FormResponse::respond();
 	}
