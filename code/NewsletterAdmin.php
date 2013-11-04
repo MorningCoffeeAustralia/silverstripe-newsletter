@@ -346,7 +346,7 @@ class NewsletterAdmin extends LeftAndMain {
 		} else {
 			$form = false;
 		}
-
+			
 		return $form;
 	}
 
@@ -829,6 +829,7 @@ class NewsletterAdmin extends LeftAndMain {
 			$actionList .= $action->Field() . ' ';
 		}
 		FormResponse::add("$('Form_EditForm').loadActionsFromString('" . Convert::raw2js($actionList) . "');");
+		FormResponse::status_message(_t('NewsletterAdmin.SAVED'), 'good');
 		return FormResponse::respond();
 	}
 
