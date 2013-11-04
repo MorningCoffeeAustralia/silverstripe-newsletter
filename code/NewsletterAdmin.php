@@ -287,10 +287,13 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
 	public function NewsletterEditForm() {
-		$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $this->currentPageID();
-		if(!is_numeric($id)) {
-			$id = 0;
+		if (isset($_REQUEST['ID'])) {
+			$id = is_int($_REQUEST['ID']) ? $_REQUEST['ID'] : 0;
 		}
+		else {
+			$id = $this->currentPageID();
+		}
+
 		return $this->getNewsletterEditForm($id);
 	}
 
@@ -631,26 +634,26 @@ class NewsletterAdmin extends LeftAndMain {
 		return $templates;
 	}
 
-	public function getNewsletterEditForm($myId){
-		$email = DataObject::get_by_id("Newsletter", $myId);
+	public function getNewsletterEditForm($id){
+		$newsletter = DataObject::get_by_id("Newsletter", $id);
 
-		if($email) {
-			$fields  = $email->getCMSFields($this);
-			$actions = $email->getCMSActions();
+		if($newsletter) {
+			$fields  = $newsletter->getCMSFields($this);
+			$actions = $newsletter->getCMSActions();
 
 			$fields->push($idField = new HiddenField("ID"));
-			$idField->setValue($myId);
+			$idField->setValue($id);
 			$fields->push($ParentidField = new HiddenField("ParentID"));
-			$ParentidField->setValue($email->ParentID);
+			$ParentidField->setValue($newsletter->ParentID);
 			$fields->push($typeField = new HiddenField("Type"));
 			$typeField->setValue('Newsletter');
 
 			$form = new Form($this, "NewsletterEditForm", $fields, $actions);
-			$form->loadDataFrom($email);
+			$form->loadDataFrom($newsletter);
 			// This saves us from having to change all the JS in response to renaming this form to NewsletterEditForm
 			$form->setHTMLID('Form_EditForm');
 
-			if($email->Status != 'Draft') {
+			if($newsletter->Status != 'Draft') {
 				$readonlyFields = $form->Fields()->makeReadonly();
 				$form->setFields($readonlyFields);
 			}
@@ -658,7 +661,7 @@ class NewsletterAdmin extends LeftAndMain {
 			$this->extend('updateEditForm', $form);
 			return $form;
 		} else {
-			user_error( 'Unknown Email ID: ' . $myId, E_USER_ERROR );
+			user_error("Unknown Newsletter ID: $id", E_USER_ERROR);
 		}
 	}
 
@@ -765,7 +768,7 @@ class NewsletterAdmin extends LeftAndMain {
 			}
 		}
 
-		$id = (int) $_REQUEST['ID'];
+		$id = is_int($_REQUEST['ID']) ? $_REQUEST['ID'] : 0;
 		$className = 'NewsletterType';
 
 		$record = DataObject::get_one($className, "\"$className\".\"ID\" = $id");
@@ -786,14 +789,10 @@ class NewsletterAdmin extends LeftAndMain {
 	 * Internal call found so far.
 	 */
 	public function savenewsletter($urlParams, $form) {
-		$id = $_REQUEST['ID'];
+		$id = is_int($_REQUEST['ID']) ? $_REQUEST['ID'] : 0;
 
 		$className = 'Newsletter';
-		if(defined('DB::USE_ANSI_SQL')) {
-			$record = DataObject::get_one($className, "\"$className\".\"ID\" = $id");
-		} else {
-			$record = DataObject::get_one($className, "`$className`.ID = $id");
-		}
+		$record = DataObject::get_one($className, "\"$className\".\"ID\" = $id");
 
 		// Is the template attached to the type, or the newsletter itself?
 		$type = $record->getNewsletterType();
