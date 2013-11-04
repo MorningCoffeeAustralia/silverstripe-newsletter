@@ -827,6 +827,13 @@ class NewsletterAdmin extends LeftAndMain {
 		$form->saveInto( $article );
 		
 		$article->write();
+		
+		// Get the new action buttons
+		$actionList = '';
+		foreach($form->Actions() as $action) {
+			$actionList .= $action->Field() . ' ';
+		}
+		FormResponse::add("$('Form_EditForm').loadActionsFromString('" . Convert::raw2js($actionList) . "');");
 		return FormResponse::respond();
 	}
 
