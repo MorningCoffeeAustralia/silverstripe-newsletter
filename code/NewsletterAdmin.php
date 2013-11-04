@@ -756,25 +756,22 @@ class NewsletterAdmin extends LeftAndMain {
 		// Both the Newsletter type and the Newsletter draft call save() when "Save" button is clicked
 		// @todo this is a hack. It needs to be cleaned up. Two different classes shouldn't share the
 		// same submit handler since they have different behaviour!
-		$type = $_REQUEST['Type'];
-		if(isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Newsletter') {
-			return $this->savenewsletter($params, $form);
-		}
-		if(isset($_REQUEST['Type']) && $_REQUEST['Type'] == 'Article') {
-			return $this->savearticle($params, $form);
+		if (isset($_REQUEST['Type'])) {
+			switch($_REQUEST['Type']) {
+				case 'Article':
+					return $this->savearticle($params, $form);
+				case 'Newsletter':
+					return $this->savenewsletter($params, $form);
+			}
 		}
 
-		$id = $_REQUEST['ID'];
+		$id = (int) $_REQUEST['ID'];
 		$className = 'NewsletterType';
 
-		if(defined('DB::USE_ANSI_SQL')) {
-			$record = DataObject::get_one($className, "\"$className\".\"ID\" = $id");
-		} else {
-			$record = DataObject::get_one($className, "`$className`.ID = $id");
-		}
-		// Is the template attached to the type, or the newsletter itself?
+		$record = DataObject::get_one($className, "\"$className\".\"ID\" = $id");
 
-		$record->Template = addslashes( $_REQUEST['Template'] );
+		// Is the template attached to the type, or the newsletter itself?
+		$record->Template = addslashes($_REQUEST['Template']);
 
 		$form->saveInto($record);
 		$record->write();
