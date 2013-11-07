@@ -104,6 +104,22 @@ class Newsletter extends DataObject {
 	}
 
 	/**
+	 * Checks if any article in the newsletter has an image
+	 *
+	 * @return bool
+	 */
+	public function _hasImages() {
+		$hasImages = false;
+		foreach ($this->Articles() as $article) {
+			$image = $article->Image();
+			if ($image->exists()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Returns a DataObject listing the recipients for the given status for this newsletter
 	 *
 	 * @param string $result 3 possible values: "Sent", (mail() returned TRUE), "Failed" (mail() returned FALSE), or "Bounced" ({@see $email_bouncehandler}).

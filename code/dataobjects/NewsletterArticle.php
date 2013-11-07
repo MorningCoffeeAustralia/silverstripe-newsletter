@@ -32,13 +32,6 @@ class NewsletterArticle extends DataObject {
 	 * @return bool
 	 */
 	public function NewsletterHasImages() {
-		$newsletter = $this->Newsletter();
-		foreach ($newsletter->Articles() as $article) {
-			$image = $article->Image();
-			if ($image->exists()) {
-				return true;
-			}
-		}
-		return false;
+		return $this->Newsletter()->hasImages();
 	}
 }
