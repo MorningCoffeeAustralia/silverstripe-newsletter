@@ -39,7 +39,8 @@ class Newsletter extends DataObject {
 		Requirements::css(SAPPHIRE_DIR . '/css/TableListField.css'); // styles for $sentReport
 		$ret = new FieldSet(
 			new TabSet("Root",
-				$mailTab = new Tab(_t('Newsletter.NEWSLETTER', 'Newsletter'),
+				$mailTab = new Tab(
+					'Main',
 					new TextField("Subject", _t('Newsletter.SUBJECT', 'Subject'), $this->Subject),
 					new HtmlEditorField('Content', 'Content', 30, 20, $this->Content),
 					new LiteralField('PreviewNewsletter', "<p><a href=\"$previewLink\" target=\"_blank\">" . _t('PREVIEWNEWSLETTER', 'Preview this newsletter') . "</a></p>")
@@ -101,6 +102,22 @@ class Newsletter extends DataObject {
 		$article->write();
 
 		return $article;
+	}
+
+	/**
+	 * Checks if any article in the newsletter has an image
+	 *
+	 * @return bool
+	 */
+	public function _hasImages() {
+		$hasImages = false;
+		foreach ($this->Articles() as $article) {
+			$image = $article->Image();
+			if ($image->exists()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

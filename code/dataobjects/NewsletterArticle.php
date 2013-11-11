@@ -32,4 +32,13 @@ class NewsletterArticle extends DataObject {
 	public function getLabel() {
 		return $this->Title ? $this->Title : "(Article)";
 	}
+
+	/**
+	 * Checks if any article in the newsletter has an image
+	 *
+	 * @return bool
+	 */
+	public function NewsletterHasImages() {
+		return $this->Newsletter()->hasImages();
+	}
 }
