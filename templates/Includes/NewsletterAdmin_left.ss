@@ -39,6 +39,13 @@ ul.tree li.MailType span.Sent a {
 				</select>
 			<input class="action" type="submit" value="<% _t('GO','Go') %>" />
 		</form>
+		<div class="checkboxAboveTree">
+			<img id="checkboxActionIndicator" src="cms/images/network-save.gif">
+			<div>
+				<input type="checkbox" id="sortitems">
+				<label for="sortitems">Allow drag &amp; drop reordering</label>
+			</div>
+		</div>
 		
 		<form class="actionparams" id="deletedrafts_options" style="display: none" action="admin/newsletter/remove">
 			<p><% _t('SELECTDRAFTS','Select the drafts that you want to delete and then click the button below') %></p>

@@ -46,6 +46,8 @@ class NewsletterAdmin extends LeftAndMain {
 		'showrecipients',
 		'showsent',
 		'showarticle',
+		'parentchange',
+		'orderchange',
 		'MailingListEditForm',
 		'TypeEditForm',
 		'UploadForm',
@@ -1072,7 +1074,7 @@ JS;
 	}
 
 	public function Link($action = null) {
-		return "admin/newsletter/";
+		return "admin/newsletter/";	
 	}
 
 	public function displayfilefield() {
@@ -1103,4 +1105,44 @@ JS;
 	function getMenuTitle() {
 		return _t('LeftAndMain.NEWSLETTERS',"Newsletters",PR_HIGH,"Menu title");
 	}
+	
+	public function orderchange($request) {
+		$postdata = $request->postVars();
+		$neworder = $postdata['ID'];
+		$counter  = 1;
+		
+		// ids are comonig through as article_{id} pull out the int part of the string
+		foreach( $neworder as &$id ) {
+			if( preg_match('/\d+/', $id, $matches) ) {
+				$id = $matches[0];
+				DB::query("UPDATE NewsletterArticle SET SortOrder = $counter WHERE ID = $id");
+				++$counter;
+			}
+		}
+		
+		FormResponse::status_message(_t('LeftAndMain.SAVED'), 'good');
+		return FormResponse::respond();
+	}
+	
+	public function parentchange($request) {
+		$postdata = $request->postVars();
+		
+		$id = null;
+		$parent = null;
+		
+		if( preg_match('/\d+/', $postdata['ID'], $id_matches) ) {
+			$id = $id_matches[0];
+		}
+		if( preg_match('/\d+$/', $postdata['ParentID'], $parent_matches) ) {
+			$parent = $parent_matches[0];
+		}
+		
+		if( $id !== null && $parent !== null ) {
+			DB::query("UPDATE NewsletterArticle SET NewsletterID = $parent WHERE ID = $id");
+		}
+		
+		FormResponse::status_message(_t('LeftAndMain.SAVED'), 'good');
+		return FormResponse::respond();
+	}
+	
 }
