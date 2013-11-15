@@ -1,4 +1,9 @@
 <?php
+
+/**
+ * Make this class sortable in your mysite folder through _config.php and
+ * SortableDataObject::add_sortable_classes
+ */
 class NewsletterArticle extends DataObject {
 	public static $db = array(
 		'Title' => 'Varchar(100)',
@@ -13,6 +18,8 @@ class NewsletterArticle extends DataObject {
 	public static $defaults = array(
 		'Title' => 'New Article'
 	);
+	
+	public static $default_sort = 'SortOrder';
 
 	public function getCMSFields($params = null) {
 		$fields = parent::getCMSFields($params);

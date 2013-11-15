@@ -3,6 +3,12 @@ SiteTreeHandlers.showNLDraft_url = 'admin/newsletter/shownewsletter/';
 SiteTreeHandlers.showNLArticle_url = 'admin/newsletter/showarticle/';
 SiteTreeHandlers.showNLType_url = 'admin/newsletter/showtype/';
 SiteTreeHandlers.controller_url = 'admin/newsletter';
+SiteTreeHandlers.parentChanged_url = 'admin/newsletter/parentchange';
+SiteTreeHandlers.orderChanged_url = 'admin/newsletter/orderchange';
+
+String.prototype.contains = function( string ) {
+	return this.indexOf( string ) != -1;	
+}
 
 SiteTree.prototype = {
 	castAsTreeNode: function(li) {
@@ -242,6 +248,142 @@ SiteTreeNode.prototype.getPageFromServer = function() {
 		$('Form_EditForm').getPageFromServer(newPageID, type, otherID, openTabName);
 };
 
+	/**
+	 * Drag'n'drop handlers - Ajax saving
+	 */
+SiteTreeNode.prototype.onParentChanged = function(node, oldParent, newParent) {
+		if(newParent.id.match(/^record-new/)) {
+			alert("You must save the page before dragging children into it");
+			return false;
+		}
+		
+		if( node == newParent || node.getIdx() == newParent.getIdx() ) {
+			alert("You cannot add a page to itself");
+			return false;
+		}
+		
+		if(node.innerHTML.toLowerCase().indexOf('<del') > -1) {
+			alert("You can't moved deleted pages");
+			return false;
+		}
+		
+		if( Element.hasClassName( newParent, 'nochildren' ) ) {
+			alert("You can't add children to that node");
+			return false;
+		}
+		
+		var currentlyOpenPageID = 0;
+		if($('Form_EditForm').elements.ID) currentlyOpenPageID = $('Form_EditForm').elements.ID.value;
+
+		statusMessage(ss.i18n._t('CMSMAIN.SAVING'), '', true);
+		var token = $$('input[name=SecurityID]')[0].value;
+		new Ajax.Request(SiteTreeHandlers.parentChanged_url, {
+			method : 'post', 
+			postBody : 'ID=' + node.getIdx() + '&ParentID=' + newParent.getIdx() + '&CurrentlyOpenPageID=' + currentlyOpenPageID + '&SecurityID=' + token,
+			onSuccess : Ajax.Evaluator,
+			onFailure : function(response) {
+				errorMessage('error saving parent', response);
+			}
+		});
+		
+		return true;
+}
+
+	/**
+	 * Called when the tree has been resorted
+	 * nodeList is a list of all the nodes in the correct rder
+	 * movedNode is the node that actually got moved to trigger this resorting
+	 */
+SiteTreeNode.prototype.onOrderChanged = function(nodeList, movedNode) {
+		statusMessage(ss.i18n._t('CMSMAIN.SAVING'), '', true);
+
+		var i, parts = Array();
+		sort = 0;
+		
+		for(i=0;i<nodeList.length;i++) {
+			if(nodeList[i].getIdx && nodeList[i].getIdx()) {
+				parts[parts.length] = 'ID[]=' + nodeList[i].getIdx();
+			
+				// Ensure that the order of new records is preserved when they are moved THEN saved
+				if( nodeList[i].id.indexOf("record-new") == 0 )
+					if( $('Form_EditForm_ID') && ( 'record-' + $('Form_EditForm_ID').value == nodeList[i].id ) )
+						if( $('Form_EditForm_Sort') )
+							$('Form_EditForm_Sort').value = ++sort;
+			}
+		}
+		
+		if(movedNode.getIdx && movedNode.getIdx()) {
+			parts[parts.length] = 'MovedNodeID=' + movedNode.getIdx();
+		}
+
+		var currentlyOpenPageID = 0;
+		if($('Form_EditForm').elements.ID) currentlyOpenPageID = $('Form_EditForm').elements.ID.value;
+
+		if(parts) {
+			var token = $$('input[name=SecurityID]')[0].value;
+			new Ajax.Request(SiteTreeHandlers.orderChanged_url, {
+				method : 'post', 
+				postBody : parts.join('&') + '&CurrentlyOpenPageID=' + currentlyOpenPageID + '&SecurityID=' + token,
+				onSuccess : function(response) {
+					movedNode.removeNodeClass('loading');
+					if( $('sitetree').selected && $('sitetree').selected[0]){
+						var idx =  $('sitetree').selected[0].getIdx();
+						if(idx){ 
+							$('Form_EditForm').getPageFromServer(idx);
+						}
+					}
+				},
+				onFailure : function(response) {
+					errorMessage('error saving order', response);
+				}
+			});
+		}
+		
+		return true;
+}
+
+
+SiteTreeNode.prototype.initialize = function(options) {
+		this.TreeNode.initialize(options);
+		
+		console.log( this.className );
+		
+		if( this.className.contains( "Article" ) ) {
+			this.hints = {
+				allowedChildren: ['none'],
+				allowedParents: ['Draft'],
+				defaultChild: 'none',
+				defaultParent: "1"
+			};
+		}
+		
+		// if anything but a draft node, apply dopper options none
+		if( !this.className.contains( 'Draft' ) || this.className.contains( 'DraftFolder') ) {
+			this.dropperOptions = {
+				accept: ['none']
+			};
+		} else {
+			this.hints = {
+				allowedChildren: ['Article'],
+				allowedParents: ['DraftFolder'],
+				defaultChild: 'Article',
+				defaultParent: "1"
+			};
+			this.dropperOptions = {
+				accept: ['Article']
+			};
+		}
+		
+//		if(this.className.indexof("title") !=-1) {
+//			
+//		}
+//
+//		if(this.className.indexOf('current') > -1) {
+//			if(!this.tree.selected) this.tree.selected = [];
+//			this.tree.selected.push(this);
+//		}
+
+}
 function draft_sent_ok( newsletterID, draftID, numEmails ) {
 	var draftsListNode = $('drafts_' + newsletterID);
 	var sentListNode = $('sent_' + newsletterID);
