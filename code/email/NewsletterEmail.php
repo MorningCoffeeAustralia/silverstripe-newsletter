@@ -19,20 +19,37 @@ class NewsletterEmail extends Email {
 	 * @param Newsletter $newsletter
 	 * @param NewsletterType $type
 	 */
-	function __construct($newsletter, $type = null) {
+	public function __construct($newsletter, $type = null) {
 		$this->newsletter = $newsletter;
-		$this->nlType = $type ? $type : $newsletter->getNewsletterType();
+		$this->nlType = $type ?: $newsletter->getNewsletterType();
 		
 		parent::__construct();
 		
 		$this->body = $newsletter->getContentBody();
 		
-		$this->populateTemplate(new ArrayData(array(
-			'Newsletter' => $this->Newsletter,
-			'UnsubscribeLink' => $this->UnsubscribeLink()
-		)));
+		$this->populateTemplate(
+			new ArrayData(
+				array(
+					'Member' => $this->getMember(),
+					'Newsletter' => $this->Newsletter,
+					'UnsubscribeLink' => $this->UnsubscribeLink()
+				)
+			)
+		);
 		
 		$this->extend('updateNewsletterEmail', $this);
+	}
+
+	public function _getMember() {
+		if ($to = $this->To()) {
+			$member = DataObject::get_one("Member", "\"Email\" = '$to'");
+		}
+		else {
+			// No to address should mean we are in a preview so get the current member
+			$member = Member::currentUser();
+		}
+
+		return $member;
 	}
 
 	public function send($id = null) {
@@ -49,28 +66,29 @@ class NewsletterEmail extends Email {
 	/**
 	 * @return Newsletter
 	 */
-	function Newsletter() {
+	public function Newsletter() {
 		return $this->newsletter;
 	}
 	
-	function UnsubscribeLink(){
-		$emailAddr = $this->To();
-		$member=DataObject::get_one("Member", "\"Email\" = '".$emailAddr."'"); 
-		if($member){ 
-			if($member->AutoLoginHash){ 
-				$member->AutoLoginExpired = date('Y-m-d', time() + (86400 * 2)); 
-				$member->write(); 
-			}else{ 
-				$member->generateAutologinHash(); 
-			} 
-			$nlTypeID = $this->nlType->ID; 
-			return Director::absoluteBaseURL() . "unsubscribe/index/".$member->AutoLoginHash."/$nlTypeID"; 
-		}else{
-			return Director::absoluteBaseURL() . "unsubscribe/index/";
+	public function UnsubscribeLink(){
+		$url = Director::absoluteBaseURL() . 'unsubscribe/index/';
+
+		if ($member = $this->getMember()) {
+			if ($member->AutoLoginHash) {
+				$member->AutoLoginExpired = date('Y-m-d', time() + (86400 * 2));
+				$member->write();
+			}
+			else {
+				$member->generateAutologinHash();
+			}
+
+			$url .= "{$member->AutoLoginHash}/{$this->nlType->ID}";
 		}
+
+		return $url;
 	}
 	
-	function getData() {
+	public function getData() {
 		return $this->template_data;
 	}
 }
