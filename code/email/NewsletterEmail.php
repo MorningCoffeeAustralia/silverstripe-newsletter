@@ -36,7 +36,13 @@ class NewsletterEmail extends Email {
 	}
 
 	public function send($id = null) {
-		$this->extend('onBeforeSend');
+		foreach ($this->extend('onBeforeSend') as $extRet) {
+			// If an extension handled the send it will return truthy
+			if($extRet) {
+				return $extRet;
+			}
+		}
+
 		parent::send($id);
 	}
 
