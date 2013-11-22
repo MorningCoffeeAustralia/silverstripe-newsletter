@@ -60,9 +60,7 @@ SiteTree.prototype = {
 	},
 
 	addArticleNode: function(title, parentID, draftID) {
-		console.log(title, parentID, draftID);
 		var st = $('sitetree');
-//		alert(draftID);//draft_1_41
 		var draftNode = this.createTreeNode( 'article_' + draftID, 'New article', 'Article', draftID );
 		this.getTreeNodeByIdx(parentID).appendTreeNode( draftNode );
 		this.changeCurrentTo( draftNode );
@@ -345,9 +343,7 @@ SiteTreeNode.prototype.onOrderChanged = function(nodeList, movedNode) {
 
 SiteTreeNode.prototype.initialize = function(options) {
 		this.TreeNode.initialize(options);
-		
-		console.log( this.className );
-		
+
 		if( this.className.contains( "Article" ) ) {
 			this.hints = {
 				allowedChildren: ['none'],
@@ -356,7 +352,7 @@ SiteTreeNode.prototype.initialize = function(options) {
 				defaultParent: "1"
 			};
 		}
-		
+
 		// if anything but a draft node, apply dopper options none
 		if( !this.className.contains( 'Draft' ) || this.className.contains( 'DraftFolder') ) {
 			this.dropperOptions = {
