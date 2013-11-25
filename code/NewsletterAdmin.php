@@ -674,7 +674,7 @@ class NewsletterAdmin extends LeftAndMain {
 		$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : $_REQUEST['NewsletterID'];
 
 		if( !$id ) {
-				FormResponse::status_message(_t('NewsletterAdmin.NONLSPECIFIED', 'No newsletter specified'),'bad');
+			FormResponse::status_message(_t('NewsletterAdmin.NONLSPECIFIED', 'No newsletter specified'),'bad');
 			return FormResponse::respond();
 		}
 
@@ -683,48 +683,29 @@ class NewsletterAdmin extends LeftAndMain {
 
 		$e = new NewsletterEmail($newsletter, $nlType);
 		$e->Subject = $subject = $newsletter->Subject;
+		$e->From = $from = ($nlType && $nlType->FromEmail ? $nlType->FromEmail : Email::getAdminEmail());
+		$e->setTemplate($nlType->Template);
 
-		// TODO Make this dynamic
-
-		if( $nlType && $nlType->FromEmail )
-			$e->From = $from = $nlType->FromEmail;
-		else
-			$e->From = $from = Email::getAdminEmail();
-
-		if(isset($_REQUEST['TestEmail'])) $e->To = $_REQUEST['TestEmail'];
-		$e->setTemplate( $nlType->Template );
-
-		$messageID = base64_encode( $newsletter->ID . '_' . date( 'd-m-Y H:i:s' ) );
+		$messageID = base64_encode($newsletter->ID . '_' . date('d-m-Y H:i:s'));
 
 		switch($_REQUEST['SendType']) {
 			case "Test":
 				if($_REQUEST['TestEmail']) {
-					$e->To = $_REQUEST['TestEmail'];
-					$e->setTemplate( $nlType->Template );
-
-					self::sendToAddress( $e, $_REQUEST['TestEmail'], $messageID );
-					FormResponse::status_message(_t('NewsletterAdmin.SENTTESTTO','Sent test to ') . $_REQUEST['TestEmail'],'good');
+					self::sendToAddress($e, $_REQUEST['TestEmail'], $messageID);
+					FormResponse::status_message(_t('NewsletterAdmin.SENTTESTTO','Sent test to ') . $_REQUEST['TestEmail'], 'good');
 				} else {
-					FormResponse::status_message(_t('NewsletterAdmin.PLEASEENTERMAIL','Please enter an email address'),'bad');
+					FormResponse::status_message(_t('NewsletterAdmin.PLEASEENTERMAIL','Please enter an email address'), 'bad');
 				}
 				break;
 			case "List":
 				// Send to the entire mailing list.
 				$groupID = $nlType->GroupID;
-				
-				if(defined('DB::USE_ANSI_SQL')) {
-					$members = DataObject::get( 'Member', "\"GroupID\"='$groupID'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"" );
-				} else {
-					$members = DataObject::get( 'Member', "`GroupID`='$groupID'", null, "INNER JOIN `Group_Members` ON `MemberID`=`Member`.`ID`" );
-				}
-				
+				$members = DataObject::get( 'Member', "\"GroupID\"='$groupID'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"" );
 				echo self::sendToList($subject, $from, $newsletter, $nlType, $messageID, $members);
 				break;
 			case "Unsent":
 				// Send to only those who have not already been sent this newsletter.
-				$only_to_unsent = 1;
-
-				echo self::sendToList( $subject, $from, $newsletter, $nlType, $messageID, $newsletter->UnsentSubscribers());
+				echo self::sendToList($subject, $from, $newsletter, $nlType, $messageID, $newsletter->UnsentSubscribers());
 				break;
 		}
 
@@ -739,7 +720,6 @@ class NewsletterAdmin extends LeftAndMain {
 
 	static function sendToList($subject, $from, $newsletter, $nlType, $messageID = null, $recipients) {
 		$emailProcess = new NewsletterEmailProcess($subject, $from, $newsletter, $nlType, $messageID, $recipients);
-		
 		return $emailProcess->start();
 	}
 

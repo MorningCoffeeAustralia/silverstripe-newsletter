@@ -41,14 +41,10 @@ class NewsletterEmailProcess extends BatchProcess {
 
 	        // check to see if the user has unsubscribed from the mailing list
 	        // TODO Join in the above query first
-			if(defined('DB::USE_ANSI_SQL')) {
-				$unsubscribeRecord = DataObject::get_one('UnsubscribeRecord', "\"MemberID\"='{$member->ID}' AND \"NewsletterTypeID\"='{$this->nlType->ID}'");
-			} else {
-	        	$unsubscribeRecord = DataObject::get_one('UnsubscribeRecord', "`MemberID`='{$member->ID}' AND `NewsletterTypeID`='{$this->nlType->ID}'");
-			}
+	        $filter = "\"MemberID\"='{$member->ID}' AND \"NewsletterTypeID\"='{$this->nlType->ID}'";
+			$unsubscribeRecord = DataObject::get_one('UnsubscribeRecord', $filter);
 
 	        if( !$unsubscribeRecord ) {
-
 	    		$address = $member->Email;
 
 	    		/**
@@ -69,7 +65,6 @@ class NewsletterEmailProcess extends BatchProcess {
 					$newsletter->Result = 'BlackListed';
 					$newsletter->ParentID = $this->newsletter->ID;
 					$newsletter->write();
-
 				} else {
 					$e = new NewsletterEmail($this->newsletter, $this->nlType);
 					$e->setSubject( $this->subject );
@@ -97,8 +92,8 @@ class NewsletterEmailProcess extends BatchProcess {
 	 * @param $member The object containing information about the member being emailed
 	 */
 	private function sendToAddress( $email, $address, $messageID = null, $member) {
-		$email->setTo( $address );
-		$result = $email->send( $messageID );
+		$email->setTo($address);
+		$result = $email->send($messageID);
 		// Log result of the send
 		$newsletter = new Newsletter_SentRecipient();
 		$newsletter->Email = $address;
