@@ -22,22 +22,8 @@ class NewsletterEmail extends Email {
 	public function __construct($newsletter, $type = null) {
 		$this->newsletter = $newsletter;
 		$this->nlType = $type ?: $newsletter->getNewsletterType();
-		
+
 		parent::__construct();
-		
-		$this->body = $newsletter->getContentBody();
-		
-		$this->populateTemplate(
-			new ArrayData(
-				array(
-					'Member' => $this->getMember(),
-					'Newsletter' => $this->Newsletter,
-					'UnsubscribeLink' => $this->UnsubscribeLink()
-				)
-			)
-		);
-		
-		$this->extend('updateNewsletterEmail', $this);
 	}
 
 	public function _getMember() {
@@ -50,17 +36,6 @@ class NewsletterEmail extends Email {
 		}
 
 		return $member;
-	}
-
-	public function send($id = null) {
-		foreach ($this->extend('onBeforeSend') as $extRet) {
-			// If an extension handled the send it will return truthy
-			if($extRet) {
-				return $extRet;
-			}
-		}
-
-		parent::send($id);
 	}
 
 	/**
@@ -90,5 +65,31 @@ class NewsletterEmail extends Email {
 	
 	public function getData() {
 		return $this->template_data;
+	}
+
+	public function populateTemplate($member = null) {
+		if (!$member) {
+			$member = $this->getMember();
+		}
+
+		$nameForEmail = (method_exists($member, "getNameForEmail")) ? $member->getNameForEmail() : false;
+
+		parent::populateTemplate(
+			new ArrayData(
+				array(
+					'Member' => $member,
+					'FirstName' => $member->FirstName,
+					'NameForEmail'=> $nameForEmail,
+					'Newsletter' => $this->Newsletter,
+					'UnsubscribeLink' => $this->UnsubscribeLink()
+				)
+			)
+		);
+	}
+
+	public function send($messageID = null, $member = null) {
+		$this->populateTemplate($member);
+
+		parent::send($messageID);
 	}
 }

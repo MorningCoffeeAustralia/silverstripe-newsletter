@@ -179,8 +179,9 @@ class NewsletterAdmin extends LeftAndMain {
 		// Block stylesheets and JS that are not required (email templates should have inline CSS/JS)
 		Requirements::clear();
 
-		$email = new NewsletterEmail($newsletter); 
-		
+		$email = new NewsletterEmail($newsletter);
+		$email->populateTemplate();
+
 		return HTTP::absoluteURLs($email->getData()->renderWith($templateName));
 	}
 
@@ -701,11 +702,11 @@ class NewsletterAdmin extends LeftAndMain {
 				// Send to the entire mailing list.
 				$groupID = $nlType->GroupID;
 				$members = DataObject::get( 'Member', "\"GroupID\"='$groupID'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"" );
-				echo self::sendToList($subject, $from, $newsletter, $nlType, $messageID, $members);
+				echo self::sendToList($subject, $from, $newsletter, $nlType, $members, $messageID);
 				break;
 			case "Unsent":
 				// Send to only those who have not already been sent this newsletter.
-				echo self::sendToList($subject, $from, $newsletter, $nlType, $messageID, $newsletter->UnsentSubscribers());
+				echo self::sendToList($subject, $from, $newsletter, $nlType, $newsletter->UnsentSubscribers(), $messageID);
 				break;
 		}
 
@@ -718,8 +719,9 @@ class NewsletterAdmin extends LeftAndMain {
 		$email->send();
 	}
 
-	static function sendToList($subject, $from, $newsletter, $nlType, $messageID = null, $recipients) {
-		$emailProcess = new NewsletterEmailProcess($subject, $from, $newsletter, $nlType, $messageID, $recipients);
+	static function sendToList($subject, $from, $newsletter, $nlType, $recipients, $messageID = null) {
+		$emailProcess = new NewsletterEmailProcess($subject, $from, $newsletter, $nlType, $recipients, $messageID);
+
 		return $emailProcess->start();
 	}
 

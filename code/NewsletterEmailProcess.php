@@ -18,22 +18,27 @@ class NewsletterEmailProcess extends BatchProcess {
 	 *
 	 * @param $recipients DataObjectSet The recipients of this newsletter
 	 */
-	function __construct( $subject, $from, $newsletter, $nlType, $messageID = null, $recipients) {
-
+	public function __construct ($subject, $from, $newsletter, $nlType, $recipients, $messageID = null) {
 		$this->subject = $subject;
 		$this->from = $from;
 		$this->newsletter = $newsletter;
 		$this->nlType = $nlType;
 		$this->messageID = $messageID;
 
-		parent::__construct( $recipients );
-
+		parent::__construct($recipients);
 	}
 
-	function next( $count = 10 ) {
+	public function getNewsletter() {
+		return $this->newsletter;
+	}
+
+	public function next ($count = 10) {
+		$numObjects = count($this->objects);
 		$max = $this->current + $count;
 
-		$max = $max < count( $this->objects ) ? $max : count( $this->objects );
+		if($max > $numObjects) {
+			$max = $numObjects;
+		}
 
 		while($this->current < $max) {
 			$index = $this->current++;
@@ -53,7 +58,7 @@ class NewsletterEmailProcess extends BatchProcess {
 				if($member->BlacklistedEmail && NewsletterEmailBlacklist::isBlocked($address)){
 					$bounceRecord = new Email_BounceRecord();
 					$bounceRecord->BounceEmail = $member->Email;
-					$bounceRecord->BounceTime = date("Y-m-d H:i:s",time());
+					$bounceRecord->BounceTime = date("Y-m-d H:i:s");
 					$bounceRecord->BounceMessage = "BlackListed Email";
 					$bounceRecord->MemberID = $member->ID;
 					$bounceRecord->write();
@@ -67,23 +72,16 @@ class NewsletterEmailProcess extends BatchProcess {
 					$newsletter->write();
 				} else {
 					$e = new NewsletterEmail($this->newsletter, $this->nlType);
-					$e->setSubject( $this->subject );
-					$e->setFrom( $this->from );
-					$e->setTemplate( $this->nlType->Template );
+					$e->setSubject($this->subject);
+					$e->setFrom($this->from);
+					$e->setTemplate($this->nlType->Template);
 
-					$nameForEmail = (method_exists($member, "getNameForEmail")) ? $member->getNameForEmail() : false;
-
-					$e->populateTemplate(array(
-						'Member' => $member,
-						'FirstName' => $member->FirstName,
-						'NameForEmail'=> $nameForEmail
-					));
 					$this->sendToAddress($e, $address, $this->messageID, $member);
 				}
 	        }
     	}
 
-	    return ($this->current >= count($this->objects)) ? $this->complete() : parent::next(); 
+	    return $this->current >= $numObjects ? $this->complete() : parent::next();
 	}
 
 	/**
@@ -91,9 +89,9 @@ class NewsletterEmailProcess extends BatchProcess {
 	 *
 	 * @param $member The object containing information about the member being emailed
 	 */
-	private function sendToAddress( $email, $address, $messageID = null, $member) {
+	private function sendToAddress ($email, $address, $messageID = null, $member) {
 		$email->setTo($address);
-		$result = $email->send($messageID);
+		$result = $email->send($messageID, $member);
 		// Log result of the send
 		$newsletter = new Newsletter_SentRecipient();
 		$newsletter->Email = $address;
@@ -108,7 +106,7 @@ class NewsletterEmailProcess extends BatchProcess {
 		// sleep(10);
 	}
 
-	function complete() {
+	public function complete () {
 		parent::complete();
 
 		$resent = ($this->newsletter->SentDate) ? true : false; 

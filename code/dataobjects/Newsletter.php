@@ -24,6 +24,22 @@ class Newsletter extends DataObject {
 		'TrackedLinks'		=> 'Newsletter_TrackedLink'
 	);
 
+	protected $myArticles;
+
+	/**
+	 * A BatchProcess is used for sending Newsletters.
+	 * Between batches, the process object is serialized into a Session variable.
+	 * In the serialization, magic methods are lost
+	 * and the object is not re-initialised after unserialization.
+	 * Calling getComponents() instead of Articles() gets around this issue.
+	 */
+	public function getMyArticles() {
+		if (empty($this->myArticles)) {
+			$this->myArticles = $this->getComponents('Articles');
+		}
+		return $this->myArticles;
+	}
+
 	/**
 	 * Returns a FieldSet with which to create the CMS editing form.
 	 * You can use the extend() method of FieldSet to create customised forms for your other

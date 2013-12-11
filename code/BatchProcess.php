@@ -42,18 +42,15 @@ class BatchProcess extends Object {
 	}
 	
 	function next() {
-		self::addProcess( $this );
+		self::addProcess($this);
 		return $this->id.':'.$this->current.'/'.count( $this->objects );
 	}
 	
 	function start() {
 		$this->current = 0;
-		$this->id = self::generateID(); 
-    
-    if( !$this->objects || count( $this->objects ) === 0 )
-      	return $this->complete();
-    
-		return $this->next();
+		$this->id = self::generateID();
+
+		return $this->objects ? $this->next() : $this->complete();
 	}
 	
 	function complete() {
