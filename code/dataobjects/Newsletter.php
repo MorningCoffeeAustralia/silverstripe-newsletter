@@ -24,7 +24,7 @@ class Newsletter extends DataObject {
 		'TrackedLinks'		=> 'Newsletter_TrackedLink'
 	);
 
-	protected $myArticles;
+	protected $articles;
 
 	/**
 	 * A BatchProcess is used for sending Newsletters.
@@ -33,11 +33,11 @@ class Newsletter extends DataObject {
 	 * and the object is not re-initialised after unserialization.
 	 * Calling getComponents() instead of Articles() gets around this issue.
 	 */
-	public function getMyArticles() {
-		if (empty($this->myArticles)) {
-			$this->myArticles = $this->getComponents('Articles');
+	public function Articles() {
+		if (empty($this->articles)) {
+			$this->articles = $this->getComponents('Articles');
 		}
-		return $this->myArticles;
+		return $this->articles;
 	}
 
 	/**
