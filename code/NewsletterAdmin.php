@@ -8,19 +8,19 @@
 
 class NewsletterAdmin extends LeftAndMain {
 	
-	static $subitem_class = 'Member';
+	public static $subitem_class = 'Member';
 	
 	/** 
 	 * @var which will be used to seperator "send items" into 2 groups, e.g. "most recent number 5", "older". 
 	 */
-	static $most_recent_seperator = 5; // an int which will be used to seperator "send items" into 2 groups, e.g. "most recent number 5", "older".
+	public static $most_recent_seperator = 5; // an int which will be used to seperator "send items" into 2 groups, e.g. "most recent number 5", "older".
 	
 	/** 
 	 * @var array Array of template paths to check 
 	 */
-	static $template_paths = null; //could be customised in _config 
+	public static $template_paths = null; //could be customised in _config 
 
-	static $allowed_actions = array(
+	public static $allowed_actions = array(
 		'addarticle',
 		'adddraft',
 		'addgroup',
@@ -54,11 +54,14 @@ class NewsletterAdmin extends LeftAndMain {
 		'NewsletterEditForm',
 	);
 
-	static $url_segment = 'newsletter';
+	public static $url_segment = 'newsletter';
 
-	static $url_rule = '/$Action/$ID/$OtherID';
+	public static $url_rule = '/$Action/$ID/$OtherID';
 
-	static $menu_title = 'Newsletter';
+	public static $menu_title = 'Newsletter';
+
+	public $newsletter = null;
+	public $newsletterType = null;
 
 	public function init() {
 		// In LeftAndMain::init() the current theme is unset.
@@ -100,6 +103,10 @@ class NewsletterAdmin extends LeftAndMain {
 		Requirements::block(SAPPHIRE_DIR . '/javascript/HtmlEditorField.js');
 
 		Requirements::css(NEWSLETTER_DIR . '/css/NewsletterAdmin.css');
+	}
+
+	public function canEdit() {
+		return true;
 	}
 
 	public function remove() {
@@ -311,39 +318,35 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
 	public function getNewsletterTypeEditForm($id) {
-		if(!is_numeric($id)) {
+		$form = null;
+
+		if (!is_numeric($id)) {
 			$id = $this->currentPageID();
 		}
-		if( is_a( $id, 'NewsletterType' ) ) {
-				$mailType = $id;
-				$id = $mailType->ID;
-		} else {
-			if($id && is_numeric($id)) {
-				$mailType = DataObject::get_by_id( 'NewsletterType', $id );
+
+		if ($id) {
+			$this->newsletterType = DataObject::get_by_id('NewsletterType', $id);
+
+			if ($this->newsletterType) {
+				$fields = $this->newsletterType->getCMSFields();
+				$fields->push($idField = new HiddenField("ID"));
+				$idField->setValue($id);
+				$fields->push(
+					new HiddenField("executeForm", "", "TypeEditForm")
+				);
+
+				$actions = new FieldSet(
+					new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save'))
+				);
+
+				$form = new Form($this, "TypeEditForm", $fields, $actions);
+				$form->loadDataFrom($this->newsletterType);
+				// This saves us from having to change all the JS in response to renaming this form to TypeEditForm
+				$form->setHTMLID('Form_EditForm');
+				$this->extend('updateEditForm', $form);
 			}
 		}
 
-		if(isset($mailType) && is_object($mailType) && $mailType->GroupID) {
-			$group = DataObject::get_one("Group", "\"ID\" = $mailType->GroupID");
-		}
-		if(isset($mailType) && $mailType) {
-			$fields = $mailType->getCMSFields();
-
-			$fields->push($idField = new HiddenField("ID"));
-			$fields->push( new HiddenField( "executeForm", "", "TypeEditForm" ) );
-			$idField->setValue($id);
-
-			$actions = new FieldSet(new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save')));
-
-			$form = new Form($this, "TypeEditForm", $fields, $actions);
-			$form->loadDataFrom($mailType);
-			// This saves us from having to change all the JS in response to renaming this form to TypeEditForm
-			$form->setHTMLID('Form_EditForm');
-			$this->extend('updateEditForm', $form);
-		} else {
-			$form = false;
-		}
-			
 		return $form;
 	}
 
@@ -632,25 +635,25 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
 	public function getNewsletterEditForm($id){
-		$newsletter = DataObject::get_by_id("Newsletter", $id);
+		$this->newsletter = DataObject::get_by_id("Newsletter", $id);
 
-		if($newsletter) {
-			$fields  = $newsletter->getCMSFields($this);
-			$actions = $newsletter->getCMSActions();
+		if($this->newsletter) {
+			$fields  = $this->newsletter->getCMSFields($this);
+			$actions = $this->newsletter->getCMSActions();
 
 			$fields->push($idField = new HiddenField("ID"));
 			$idField->setValue($id);
 			$fields->push($ParentidField = new HiddenField("ParentID"));
-			$ParentidField->setValue($newsletter->ParentID);
+			$ParentidField->setValue($this->newsletter->ParentID);
 			$fields->push($typeField = new HiddenField("Type"));
 			$typeField->setValue('Newsletter');
 
 			$form = new Form($this, "NewsletterEditForm", $fields, $actions);
-			$form->loadDataFrom($newsletter);
+			$form->loadDataFrom($this->newsletter);
 			// This saves us from having to change all the JS in response to renaming this form to NewsletterEditForm
 			$form->setHTMLID('Form_EditForm');
 
-			if($newsletter->Status != 'Draft') {
+			if($this->newsletter->Status != 'Draft') {
 				$readonlyFields = $form->Fields()->makeReadonly();
 				$form->setFields($readonlyFields);
 			}
