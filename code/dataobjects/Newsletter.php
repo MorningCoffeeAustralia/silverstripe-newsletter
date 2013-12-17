@@ -42,14 +42,24 @@ class Newsletter extends DataObject {
 	 * @param boolean $cached
 	 */
 	public function Articles($cached = false) {
-		if (empty($this->articles)) {
-			$this->articles = new DataObjectSet;
-			$articles = $this->getComponents('Articles');
-			foreach ($articles as $article) {
-				$this->articles->push($article);
+		if ($cached) {
+			if (empty($this->articles)) {
+				$this->articles = new DataObjectSet;
+
+				$articles = $this->getComponents('Articles');
+				if ($articles && $articles->exists()) {
+					foreach ($articles as $article) {
+						$this->articles->push($article);
+					}
+				}
 			}
+			$articles = $this->articles;
 		}
-		return $this->articles;
+		else {
+			$articles = $this->getComponents('Articles');
+		}
+
+		return $articles;
 	}
 
 	/**
