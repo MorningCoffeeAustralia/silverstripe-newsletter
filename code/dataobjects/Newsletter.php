@@ -32,10 +32,22 @@ class Newsletter extends DataObject {
 	 * In the serialization, magic methods are lost
 	 * and the object is not re-initialised after unserialization.
 	 * Calling getComponents() instead of Articles() gets around this issue.
+	 *
+	 * If requesting cached Articles via the $cached argument, the returned variable
+	 * is a DataObjectSet and therefore can not be use for adding or removing
+	 * relationships. This is done due to issues with the rendering of the template
+	 * when the return value is used in a Control block. Simply using a
+	 * LazyLoadComponentSet results in only 1 article being returned in the Control.
+	 *
+	 * @param boolean $cached
 	 */
-	public function Articles() {
+	public function Articles($cached = false) {
 		if (empty($this->articles)) {
-			$this->articles = $this->getComponents('Articles');
+			$this->articles = new DataObjectSet;
+			$articles = $this->getComponents('Articles');
+			foreach ($articles as $article) {
+				$this->articles->push($article);
+			}
 		}
 		return $this->articles;
 	}
