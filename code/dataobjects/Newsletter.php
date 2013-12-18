@@ -71,7 +71,6 @@ class Newsletter extends DataObject {
 	 * @return FieldSet
 	 */
 	function getCMSFields($controller = null) {
-		$group = DataObject::get_by_id("Group", $this->Parent()->GroupID);
 		$sentReport = $this->renderWith("Newsletter_SentStatusReport");
 		$previewLink = Director::absoluteBaseURL() . 'admin/newsletter/preview/' . $this->ID;
 		Requirements::css(SAPPHIRE_DIR . '/css/TableListField.css'); // styles for $sentReport
