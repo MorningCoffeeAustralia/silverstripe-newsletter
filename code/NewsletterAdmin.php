@@ -358,7 +358,7 @@ class NewsletterAdmin extends LeftAndMain {
 			$fields = new FieldSet(
 				new TabSet("Root",
 					new Tab(_t('NewsletterAdmin.RECIPIENTS', 'Recipients'),
-						$recipients = new MemberTableField(
+						$recipients = new NewsletterMemberTableField(
 							$this,
 							"Recipients",
 							$group
@@ -665,12 +665,15 @@ class NewsletterAdmin extends LeftAndMain {
 			case "List":
 				// Send to the entire mailing list.
 				$groupID = $nlType->GroupID;
-				$members = DataObject::get( 'Member', "\"GroupID\"='$groupID'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"" );
-				echo self::sendToList($subject, $from, $this->newsletter, $nlType, $members, $messageID);
+				$recipients = DataObject::get('Member', "\"GroupID\"='$groupID'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"");
+				$this->extend('updateRecipients', $this->request['SendType'], $recipients);
+				echo self::sendToList($subject, $from, $this->newsletter, $nlType, $recipients, $messageID);
 				break;
 			case "Unsent":
 				// Send to only those who have not already been sent this newsletter.
-				echo self::sendToList($subject, $from, $this->newsletter, $nlType, $this->newsletter->UnsentSubscribers(), $messageID);
+				$recipients = $this->newsletter->UnsentSubscribers();
+				$this->extend('updateRecipients', $this->request['SendType'], $recipients);
+				echo self::sendToList($subject, $from, $this->newsletter, $nlType, $recipients, $messageID);
 				break;
 		}
 
@@ -1017,7 +1020,7 @@ JS;
 	}
 
 	public function Link($action = null) {
-		return "admin/newsletter/";	
+		return 'admin/newsletter/';
 	}
 
 	public function displayfilefield() {
@@ -1087,7 +1090,7 @@ JS;
 		return FormResponse::respond();
 	}
 
-	protected function setCurrentPageIDFromRequest() {
+	public function setCurrentPageIDFromRequest() {
 		$request = $this->getCachedRequest();
 		$id = 0;
 
@@ -1102,7 +1105,7 @@ JS;
 		$this->setCurrentPageID($this->currentID);
 	}
 
-	protected function setNewsletterFromRequest() {
+	public function setNewsletterFromRequest() {
 		if (!$this->newsletter) {
 			if ($this->currentID) {
 				$this->newsletter = DataObject::get_by_id('Newsletter', $this->currentID);
@@ -1114,7 +1117,7 @@ JS;
 		}
 	}
 
-	protected function setNewsletterArticleFromRequest() {
+	public function setNewsletterArticleFromRequest() {
 		if (!$this->newsletterArticle) {
 			if ($this->currentID) {
 				$this->newsletterArticle = DataObject::get_by_id('NewsletterArticle', $this->currentID);
@@ -1126,7 +1129,7 @@ JS;
 		}
 	}
 
-	protected function setNewsletterTypeFromRequest() {
+	public function setNewsletterTypeFromRequest() {
 		if (!$this->newsletterType) {
 			if ($this->currentID) {
 				$this->newsletterType = DataObject::get_by_id('NewsletterType', $this->currentID);

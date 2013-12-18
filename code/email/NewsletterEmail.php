@@ -72,14 +72,12 @@ class NewsletterEmail extends Email {
 			$member = $this->getMember();
 		}
 
-		$nameForEmail = (method_exists($member, "getNameForEmail")) ? $member->getNameForEmail() : false;
-
 		parent::populateTemplate(
 			new ArrayData(
 				array(
 					'Member' => $member,
-					'FirstName' => $member->FirstName,
-					'NameForEmail'=> $nameForEmail,
+					'FirstName' => $member ? $member->FirstName : null,
+					'NameForEmail'=> (method_exists($member, "getNameForEmail")) ? $member->getNameForEmail() : null,
 					'Newsletter' => $this->Newsletter,
 					'UnsubscribeLink' => $this->UnsubscribeLink()
 				)
@@ -90,6 +88,6 @@ class NewsletterEmail extends Email {
 	public function send($messageID = null, $member = null) {
 		$this->populateTemplate($member);
 
-		parent::send($messageID);
+		return parent::send($messageID);
 	}
 }
