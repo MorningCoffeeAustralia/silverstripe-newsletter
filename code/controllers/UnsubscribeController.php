@@ -17,7 +17,7 @@ class UnsubscribeController extends Page_Controller {
 		return "unsubscribe/$action";
 	}
 	
-	private function getMember(){
+	public function getMember(){
 		$autoLoginHash = Convert::raw2sql($this->urlParams['AutoLoginHash']);
 		if($autoLoginHash) {
 			$member = DataObject::get_one('Member', "\"AutoLoginHash\" = '$autoLoginHash'");
@@ -25,7 +25,7 @@ class UnsubscribeController extends Page_Controller {
 		}
 	}
 	
-	private function getMailingList(){
+	public function getMailingList(){
 		$mailingListID = Convert::raw2sql($this->urlParams['MailingList']);
 
 		if($mailingListID) {

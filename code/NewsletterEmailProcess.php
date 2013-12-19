@@ -44,17 +44,17 @@ class NewsletterEmailProcess extends BatchProcess {
 			$index = $this->current++;
 			$member = $this->objects[$index];
 
-	        // check to see if the user has unsubscribed from the mailing list
-	        // TODO Join in the above query first
-	        $filter = "\"MemberID\"='{$member->ID}' AND \"NewsletterTypeID\"='{$this->nlType->ID}'";
+			// check to see if the user has unsubscribed from the mailing list
+			// TODO Join in the above query first
+			$filter = "\"MemberID\"='{$member->ID}' AND \"NewsletterTypeID\"='{$this->nlType->ID}'";
 			$unsubscribeRecord = DataObject::get_one('UnsubscribeRecord', $filter);
 
 	        if( !$unsubscribeRecord ) {
-	    		$address = $member->Email;
+				$address = $member->Email;
 
-	    		/**
-	    		 * Email Blacklisting Support
-	    		 */
+				/**
+				 * Email Blacklisting Support
+				 */
 				if($member->BlacklistedEmail && NewsletterEmailBlacklist::isBlocked($address)){
 					$bounceRecord = new Email_BounceRecord();
 					$bounceRecord->BounceEmail = $member->Email;
@@ -78,8 +78,8 @@ class NewsletterEmailProcess extends BatchProcess {
 
 					$this->sendToAddress($e, $address, $this->messageID, $member);
 				}
-	        }
-    	}
+			}
+		}
 
 	    return $this->current >= $numObjects ? $this->complete() : parent::next();
 	}
