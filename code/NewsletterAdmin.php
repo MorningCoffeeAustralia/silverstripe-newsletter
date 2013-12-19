@@ -425,7 +425,7 @@ class NewsletterAdmin extends LeftAndMain {
 		$form->loadDataFrom($this->newsletterArticle);
 
 		$this->newsletter = $this->newsletterArticle->Newsletter();
-		if($this->newsletter->Status != 'Draft') {
+		if(!$this->newsletter->isDraft()) {
 			$readonlyFields = $form->Fields()->makeReadonly();
 			$form->setFields($readonlyFields);
 		}
@@ -617,7 +617,7 @@ class NewsletterAdmin extends LeftAndMain {
 		// This saves us from having to change all the JS in response to renaming this form to NewsletterEditForm
 		$form->setHTMLID('Form_EditForm');
 
-		if($this->newsletter->Status != 'Draft') {
+		if(!$this->newsletter->isDraft()) {
 			$readonlyFields = $form->Fields()->makeReadonly();
 			$form->setFields($readonlyFields);
 		}
@@ -937,7 +937,7 @@ JS;
 
 		$this->currentID = $this->newNewsletterType();
 
-		$form = $this->getNewsletterTypeEditForm($typeid);
+		$form = $this->getNewsletterTypeEditForm($this->currentID);
 		return $this->showWithEditForm($form);
 	}
 
@@ -946,7 +946,7 @@ JS;
 	 * Top level call
 	 */
 	public function adddraft($params) {
-		$this->setCachedRequest($params);
+		$this->setCachedRequest();
 
 		$draftID = $this->newDraft($this->request['ParentID']);
 		// Needed for shownewsletter() to work

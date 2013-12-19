@@ -101,7 +101,7 @@ class Newsletter extends DataObject {
 		$tracked->setTitle(_t('Newsletter.TRACKEDLINKS', 'Tracked Links'));
 		$trackedTable->setPermissions(array('show'));
 
-		if($this->Status != 'Draft') {
+		if(!$this->isDraft()) {
 			$mailTab->push( new ReadonlyField("SentDate", _t('Newsletter.SENTAT', 'Sent at'), $this->SentDate) );
 		}
 		
@@ -155,6 +155,10 @@ class Newsletter extends DataObject {
 			}
 		}
 		return false;
+	}
+
+	public function isDraft() {
+		return !$this->Status || $this->Status === 'Draft';
 	}
 
 	/**
