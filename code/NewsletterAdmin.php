@@ -358,7 +358,7 @@ class NewsletterAdmin extends LeftAndMain {
 			$fields = new FieldSet(
 				new TabSet("Root",
 					new Tab(_t('NewsletterAdmin.RECIPIENTS', 'Recipients'),
-						$recipients = new NewsletterMemberTableField(
+						$recipients = new NewsletterAdminMemberTableField(
 							$this,
 							"Recipients",
 							$group

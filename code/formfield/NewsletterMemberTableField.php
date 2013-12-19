@@ -4,7 +4,7 @@
  * in such a way that it works poorly with the ComplexTableField and its children.
  * Features such as search do not have a link to the Newsletter so they do not work.
  */
-class NewsletterMemberTableField extends MemberTableField {
+class NewsletterAdminMemberTableField extends MemberTableField {
 	// Add the Newsletter ID to the wrapping div
 	// This is used by the search functionality
 	public function SearchForm() {
