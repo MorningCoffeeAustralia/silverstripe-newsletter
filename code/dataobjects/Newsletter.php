@@ -188,11 +188,8 @@ class Newsletter extends DataObject {
 		}
 
 		// Get a list of all the subscribers to this newsletter
-        if(defined('DB::USE_ANSI_SQL')) {
-			$subscribers = DataObject::get( 'Member', "\"GroupID\"='".$this->Parent()->GroupID."'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"" );
-        } else {
-        	$subscribers = DataObject::get( 'Member', "`GroupID`='".$this->Parent()->GroupID."'", null, "INNER JOIN `Group_Members` ON `MemberID`=`Member`.`ID`" );
-        }
+		$subscribers = DataObject::get( 'Member', "\"GroupID\"='".$this->Parent()->GroupID."'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"" );
+
 		// If this Newsletter has no subscribers, $subscribers will be null
 		if ($subscribers != null) {
 			$subscribers_array = $subscribers->toNestedArray();

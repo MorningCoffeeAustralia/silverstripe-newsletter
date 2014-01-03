@@ -74,8 +74,10 @@ SiteTree.prototype = {
 		}
 		// BUGFIX: If no selection is made in the left tree, and a draft is added, parentID won't be set,
 		// so we need to use the value from the Draft edit form.
-		parentID = $('Form_EditForm_ParentID').value;
-		var draftNode = this.createTreeNode( 'draft_' + parentID + '_' + draftID, title, 'Draft', draftID );
+		if (!parentID) {
+			parentID = $('Form_EditForm_ParentID').value;
+		}
+		var draftNode = this.createTreeNode('draft_' + parentID + '_' + draftID, title, 'Draft', draftID);
 		this.getTreeNodeByIdx('drafts_' + parentID).appendTreeNode( draftNode );
 		this.changeCurrentTo( draftNode );
 	},

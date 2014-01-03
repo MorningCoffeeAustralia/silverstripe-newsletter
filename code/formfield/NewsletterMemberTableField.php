@@ -8,9 +8,9 @@ class NewsletterAdminMemberTableField extends MemberTableField {
 	// Add the Newsletter ID to the wrapping div
 	// This is used by the search functionality
 	public function SearchForm() {
-		$this->controller->setNewsletterFromRequest();
+		$this->controller->setNewsletterTypeFromRequest();
 
-		$input = '<input type="hidden" name="ID" value="' . $this->controller->newsletter->ID . '" />';
+		$input = '<input type="hidden" name="ID" value="' . $this->controller->newsletterType->ID . '" />';
 
 		return preg_replace('/<input/', "$input <input", parent::SearchForm(), 1);
 	}

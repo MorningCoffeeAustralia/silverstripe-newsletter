@@ -60,6 +60,7 @@ class NewsletterAdmin extends LeftAndMain {
 
 	protected $currentID         = null;
 	protected $request           = null;
+	public    $form              = null;
 	public    $newsletter        = null;
 	public    $newsletterArticle = null;
 	public    $newsletterType    = null;
@@ -166,7 +167,7 @@ class NewsletterAdmin extends LeftAndMain {
 	* Second level call when create a draft
 	* Called when a draft or sent newsletter is clicked on the left menu and when a new one is added
 	*/
-	public function shownewsletter($params) {
+	public function shownewsletter($params = null) {
 		$this->setCachedRequest($params);
 		$this->setCurrentPageIDFromRequest();
 
@@ -180,6 +181,7 @@ class NewsletterAdmin extends LeftAndMain {
 	 */
 	public function preview($request) {
 		$this->setCachedRequest($request);
+		$this->setCurrentPageIDFromRequest();
 		$this->setNewsletterFromRequest();
 
 		$templateName = $this->newsletter->Parent()->Template ?: 'GenericEmail';
@@ -228,10 +230,11 @@ class NewsletterAdmin extends LeftAndMain {
 	
 	public function showarticle($params) {
 		$this->setCachedRequest($params);
+		$this->setCurrentPageIDFromRequest();
 
-		$form = $this->getArticleEditForm();
+		$this->form = $this->getArticleEditForm();
 
-		return $this->showWithEditForm($form);
+		return $this->showWithEditForm();
 	}
 
 	/**
@@ -249,8 +252,9 @@ class NewsletterAdmin extends LeftAndMain {
 	/**
 	 * This function is called only internally, so make sure that $params is not a SS_HTTPRequest from caller.
 	 */
-	private function showWithEditForm($editForm) {
+	private function showWithEditForm() {
 		$this->setCurrentPageIDFromRequest();
+		$this->setNewsletterTypeFromRequest();
 
 		$request = $this->getCachedRequest();
 		if (isset($request['OtherID']) && $request['OtherID'] && is_numeric($request['OtherID'])) {
@@ -259,16 +263,16 @@ class NewsletterAdmin extends LeftAndMain {
 
 		if (Director::is_ajax()) {
 			SSViewer::setOption('rewriteHashlinks', false);
-			return $editForm->formHtmlContent();
+			return $this->form->formHtmlContent();
 		} else {
-			return array('EditForm' => $editForm);
+			return array('EditForm' => $this->form);
 		}
 	}
 
 	public function getEditForm() {
-		$form = $this->getNewsletterTypeEditForm();
-		$form->disableDefaultAction();
-		return $form;
+		$this->form = $this->getNewsletterTypeEditForm();
+		$this->form->disableDefaultAction();
+		return $this->form;
 	}
 
 	/**
@@ -280,28 +284,26 @@ class NewsletterAdmin extends LeftAndMain {
 		// Include JavaScript to ensure HtmlEditorField works.
 		HtmlEditorField::include_js();
 
-		if ($this->currentID) {
-			if ((isset($this->request['Type']) && $this->request['Type'] == 'Newsletter')
-				|| isset($this->request['action_savenewsletter'])
+		if ((isset($this->_request['Type']) && $this->_request['Type'] == 'Newsletter')
+			|| isset($this->_request['action_savenewsletter'])
+		) {
+			$this->form = $this->NewsletterEditForm();
+		} elseif (isset($this->_request['Type']) && $this->_request['Type'] == 'Article') {
+			$this->form = $this->ArticleEditForm();
+		} else {
+			// If a mailing list member is being added to a group, then call the Recipient form
+			if ((isset($this->_request['fieldName']) && $this->_request['fieldName'] == 'Recipients')
+				|| (!empty($this->_request['MemberSearch']))
 			) {
-				$form = $this->NewsletterEditForm();
-			} elseif (isset($this->request['Type']) && $this->request['Type'] == 'Article') {
-				$form = $this->ArticleEditForm();
+				$this->form = $this->MailingListEditForm();
 			} else {
-				// If a mailing list member is being added to a group, then call the Recipient form
-				if ((isset($this->request['fieldName']) && $this->request['fieldName'] == 'Recipients')
-					|| (!empty($this->request['MemberSearch']))
-				) {
-					$form = $this->MailingListEditForm();
-				} else {
-					$form = $this->TypeEditForm();
-				}
+				$this->form = $this->TypeEditForm();
 			}
-			if ($form) {
-				$form->disableDefaultAction();
-			}
-			return $form;
 		}
+		if ($this->form) {
+			$this->form->disableDefaultAction();
+		}
+		return $this->form;
 	}
 
 	public function NewsletterEditForm() {
@@ -315,16 +317,27 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
 	public function TypeEditForm() {
+		$this->setCachedRequest($_REQUEST);
+		$this->setCachedRequest($this->getRequest()->getVars());
 		$this->setCurrentPageIDFromRequest();
 
-		return $this->getNewsletterTypeEditForm();
+		// @todo This is incorrect—the Mailing List search form is posting to
+		// the form action of /admin/newsletter/TypeEditForm/field/Recipients
+		// however there is probably broken javascript that should be posting
+		// it to admin/newsletter/MailingListEditForm/field/Recipients which
+		// is stored as a href attribute on one of the grandparent divs.
+		if (isset($this->_request['MemberSearch'])) {
+			return $this->MailingListEditForm();
+		}
+		else {
+			return $this->getNewsletterTypeEditForm();
+		}
 	}
 	public function MailingListEditForm() {
 		return $this->getMailingListEditForm();
 	}
 
 	public function getNewsletterTypeEditForm() {
-		$form = null;
 		$this->setNewsletterTypeFromRequest();
 
 		$fields = $this->newsletterType->getCMSFields();
@@ -338,13 +351,13 @@ class NewsletterAdmin extends LeftAndMain {
 			new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save'))
 		);
 
-		$form = new Form($this, "TypeEditForm", $fields, $actions);
-		$form->loadDataFrom($this->newsletterType);
+		$this->form = new Form($this, "TypeEditForm", $fields, $actions);
+		$this->form->loadDataFrom($this->newsletterType);
 		// This saves us from having to change all the JS in response to renaming this form to TypeEditForm
-		$form->setHTMLID('Form_EditForm');
-		$this->extend('updateEditForm', $form);
+		$this->form->setHTMLID('Form_EditForm');
+		$this->extend('updateEditForm', $this->form);
 
-		return $form;
+		return $this->form;
 	}
 
 	public function getMailingListEditForm() {
@@ -353,7 +366,7 @@ class NewsletterAdmin extends LeftAndMain {
 		$group = $this->newsletterType->GroupID
 			? DataObject::get_one("Group", "\"ID\" = {$this->newsletterType->GroupID}")
 			: null;
-
+error_log("Group = $group->ID");
 		if ($group) {
 			$fields = new FieldSet(
 				new TabSet("Root",
@@ -388,22 +401,22 @@ class NewsletterAdmin extends LeftAndMain {
 			// Save button is not used in Mailing List section
 			$actions = new FieldSet(new HiddenField("save"));
 
-			$form = new Form($this, "MailingListEditForm", $fields, $actions);
-			$form->loadDataFrom(array(
+			$this->form = new Form($this, "MailingListEditForm", $fields, $actions);
+			$this->form->loadDataFrom(array(
 				'Title' => $this->newsletterType->Title,
 				'FromEmail' => $this->newsletterType->FromEmail
 			));
 			// This saves us from having to change all the JS in response to renaming this form to MailingListEditForm
-			$form->setHTMLID('Form_EditForm');
-			$this->extend('updateEditForm', $form);
+			$this->form->setHTMLID('Form_EditForm');
+			$this->extend('updateEditForm', $this->form);
 		} else {
 			$fields = new FieldSet(
 				new LiteralField('GroupWarning', _t('NewsletterAdmin.NO_GROUP', 'No mailing group selected'))
 			);
-			$form = new Form($this, "MailingListEditForm", $fields, new FieldSet());
+			$this->form = new Form($this, "MailingListEditForm", $fields, new FieldSet());
 		}
 
-		return $form;
+		return $this->form;
 	}
 
 	public function getArticleEditForm() {
@@ -415,22 +428,28 @@ class NewsletterAdmin extends LeftAndMain {
 		$fields->removeByName('Image');
 		$fields->addFieldToTab('Root.Main', new HiddenField('ID', 'ID', $this->currentID));
 		$fields->addFieldToTab('Root.Main', new HiddenField('Type', 'Type', 'Article'));
-		$fields->addFieldToTab('Root.Main', new LiteralField('ImageUpload', '<iframe name="Image_iframe" src="admin/newsletterarticle/NewsletterArticle/' . $this->currentID . '/EditForm/field/Image/iframe" style="height: 152px; width: 100%; border: none;"></iframe>'));
+
+		$iframe = '<iframe'
+					. ' name="Image_iframe"'
+					. ' src="admin/newsletterarticle/NewsletterArticle/' . $this->currentID . '/EditForm/field/Image/iframe"'
+					. ' style="height: 152px; width: 100%; border: none;"'
+				. '></iframe>';
+		$fields->addFieldToTab('Root.Main', new LiteralField('ImageUpload', $iframe));
 		
 		$actions = new FieldSet(new FormAction('save', _t('NewsletterAdmin.SAVE', 'Save')));
 
 		// keeping form name as EditForm
 		// this hooks into the NewsletterAdmin_right.js to tigger saves
-		$form = new Form($this, "EditForm", $fields, $actions);
-		$form->loadDataFrom($this->newsletterArticle);
+		$this->form = new Form($this, "EditForm", $fields, $actions);
+		$this->form->loadDataFrom($this->newsletterArticle);
 
 		$this->newsletter = $this->newsletterArticle->Newsletter();
 		if(!$this->newsletter->isDraft()) {
-			$readonlyFields = $form->Fields()->makeReadonly();
-			$form->setFields($readonlyFields);
+			$readonlyFields = $this->form->Fields()->makeReadonly();
+			$this->form->setFields($readonlyFields);
 		}
 
-		return $form;
+		return $this->form;
 	}
 
 	/**
@@ -449,7 +468,7 @@ class NewsletterAdmin extends LeftAndMain {
 			$bounceObject->delete();
 
 			$memberObject = DataObject::get_by_id('Member', $bounceObject->MemberID);
-			$groupID = $this->request['GroupID'];
+			$groupID = $this->_request['GroupID'];
 			if(is_numeric($groupID) && $memberObject) {
 				// Remove the member from the mailing list
 				$memberObject->Groups()->remove($groupID);
@@ -468,6 +487,7 @@ class NewsletterAdmin extends LeftAndMain {
 	 */
 	function getsentstatusreport($params) {
 		$this->setCachedRequest($params);
+		$this->setCurrentPageIDFromRequest();
 		
 		if(Director::is_ajax()) {
 			$this->setNewsletterFromRequest();
@@ -600,6 +620,7 @@ class NewsletterAdmin extends LeftAndMain {
 	}
 
 	public function getNewsletterEditForm() {
+		$this->setCachedRequest($_REQUEST);
 		$this->setNewsletterFromRequest();
 
 		$fields  = $this->newsletter->getCMSFields($this);
@@ -612,18 +633,18 @@ class NewsletterAdmin extends LeftAndMain {
 		$fields->push($typeField = new HiddenField("Type"));
 		$typeField->setValue('Newsletter');
 
-		$form = new Form($this, "NewsletterEditForm", $fields, $actions);
-		$form->loadDataFrom($this->newsletter);
+		$this->form = new Form($this, "NewsletterEditForm", $fields, $actions);
+		$this->form->loadDataFrom($this->newsletter);
 		// This saves us from having to change all the JS in response to renaming this form to NewsletterEditForm
-		$form->setHTMLID('Form_EditForm');
+		$this->form->setHTMLID('Form_EditForm');
 
 		if(!$this->newsletter->isDraft()) {
-			$readonlyFields = $form->Fields()->makeReadonly();
-			$form->setFields($readonlyFields);
+			$readonlyFields = $this->form->Fields()->makeReadonly();
+			$this->form->setFields($readonlyFields);
 		}
 
-		$this->extend('updateEditForm', $form);
-		return $form;
+		$this->extend('updateEditForm', $this->form);
+		return $this->form;
 	}
 
 	public function SendProgressBar() {
@@ -653,11 +674,11 @@ class NewsletterAdmin extends LeftAndMain {
 
 		$messageID = base64_encode($this->newsletter->ID . '_' . date('d-m-Y H:i:s'));
 
-		switch($this->request['SendType']) {
+		switch($this->_request['SendType']) {
 			case "Test":
-				if($this->request['TestEmail']) {
-					self::sendToAddress($e, $this->request['TestEmail'], $messageID);
-					FormResponse::status_message(_t('NewsletterAdmin.SENTTESTTO','Sent test to ') . $this->request['TestEmail'], 'good');
+				if($this->_request['TestEmail']) {
+					self::sendToAddress($e, $this->_request['TestEmail'], $messageID);
+					FormResponse::status_message(_t('NewsletterAdmin.SENTTESTTO','Sent test to ') . $this->_request['TestEmail'], 'good');
 				} else {
 					FormResponse::status_message(_t('NewsletterAdmin.PLEASEENTERMAIL','Please enter an email address'), 'bad');
 				}
@@ -666,13 +687,13 @@ class NewsletterAdmin extends LeftAndMain {
 				// Send to the entire mailing list.
 				$groupID = $nlType->GroupID;
 				$recipients = DataObject::get('Member', "\"GroupID\"='$groupID'", null, "INNER JOIN \"Group_Members\" ON \"MemberID\"=\"Member\".\"ID\"");
-				$this->extend('updateRecipients', $this->request['SendType'], $recipients);
+				$this->extend('updateRecipients', $this->_request['SendType'], $recipients);
 				echo self::sendToList($subject, $from, $this->newsletter, $nlType, $recipients, $messageID);
 				break;
 			case "Unsent":
 				// Send to only those who have not already been sent this newsletter.
 				$recipients = $this->newsletter->UnsentSubscribers();
-				$this->extend('updateRecipients', $this->request['SendType'], $recipients);
+				$this->extend('updateRecipients', $this->_request['SendType'], $recipients);
 				echo self::sendToList($subject, $from, $this->newsletter, $nlType, $recipients, $messageID);
 				break;
 		}
@@ -699,57 +720,62 @@ class NewsletterAdmin extends LeftAndMain {
 	 * data as an array...
 	 */
 	public function save($params, $form) {
+		$this->form = $form;
 		$this->setCachedRequest($params);
 		$this->setCurrentPageIDFromRequest();
 
 		// Both the Newsletter type and the Newsletter draft call save() when "Save" button is clicked
 		// @todo this is a hack. It needs to be cleaned up. Two different classes shouldn't share the
 		// same submit handler since they have different behaviour!
-		$type = isset($this->request['Type']) ? $this->request['Type'] : 'NewsletterType';
+		$type = isset($this->_request['Type']) ? $this->_request['Type'] : 'NewsletterType';
 		switch($type) {
 			case 'Article':
-				return $this->savearticle($form);
+				return $this->savearticle();
 			case 'Newsletter':
-				return $this->savenewsletter($form);
+				return $this->savenewsletter();
 			default:
-				return $this->savenewslettertype($form);
+				return $this->savenewslettertype();
 		}
 	}
 
 	/*
 	 * Internal call found so far.
 	 */
-	public function savenewsletter($form) {
+	public function savenewsletter() {
 		$this->setNewsletterFromRequest();
 
 		// Is the template attached to the type, or the newsletter itself?
 		$type = $this->newsletter->getNewsletterType();
 
-		$form->saveInto($this->newsletter);
-		$this->newsletter->Subject = $this->request['Subject'];
-		$this->newsletter->Content = $this->request['Content'];
+		// The save always comes from NewsetterType so need to adjust the form
+		// to include the dataFields from Newsletter
+		$fields = $this->newsletter->getCMSFields();
+		$this->form->setFields($fields);
+		$this->form->loadDataFrom($this->_request, true);
+
+		$this->form->saveInto($this->newsletter);
 		$this->newsletter->write();
 
-		$id = 'draft_'.$this->newsletter->ParentID.'_'.$this->newsletter->ID;
+		$id = "draft_{$this->newsletter->ParentID}_{$this->newsletter->ID}";
 
 		FormResponse::set_node_title($id, $this->newsletter->Title);
 		FormResponse::status_message('Saved', 'good');
 		// Get the new action buttons
 		$actionList = '';
-		foreach($form->Actions() as $action) {
+		foreach($this->form->Actions() as $action) {
 			$actionList .= $action->Field() . ' ';
 		}
 		FormResponse::add("$('Form_EditForm').loadActionsFromString('" . Convert::raw2js($actionList) . "');");
 		return FormResponse::respond();
 	}
 
-	public function savenewslettertype($form) {
+	public function savenewslettertype() {
 		$this->setNewsletterTypeFromRequest();
 
 		// Is the template attached to the type, or the newsletter itself?
-		$this->newsletterType->Template = addslashes($this->request['Template']);
+		$this->newsletterType->Template = addslashes($this->_request['Template']);
 
-		$form->saveInto($this->newsletterType);
+		$this->form->saveInto($this->newsletterType);
 		$this->newsletterType->write();
 
 		FormResponse::set_node_title("mailtype_$this->currentID", $this->newsletterType->Title);
@@ -758,17 +784,17 @@ class NewsletterAdmin extends LeftAndMain {
 		return FormResponse::respond();
 	}
 	
-	public function savearticle($form) {
+	public function savearticle() {
 		$this->setNewsletterArticleFromRequest();
-		$this->newsletterArticle->Title = $this->request['Title'];
-		$this->newsletterArticle->Body = $this->request['Body'];
-		$form->saveInto($this->newsletterArticle);
+		$this->newsletterArticle->Title = $this->_request['Title'];
+		$this->newsletterArticle->Body = $this->_request['Body'];
+		$this->form->saveInto($this->newsletterArticle);
 
 		$this->newsletterArticle->write();
 
 		// Get the new action buttons
 		$actionList = '';
-		foreach($form->Actions() as $action) {
+		foreach($this->form->Actions() as $action) {
 			$actionList .= $action->Field() . ' ';
 		}
 		FormResponse::add("$('Form_EditForm').loadActionsFromString('" . Convert::raw2js($actionList) . "');");
@@ -860,13 +886,13 @@ class NewsletterAdmin extends LeftAndMain {
 			$record = new $className();
 		}
 
-		$record->update($this->request);
+		$record->update($this->_request);
 		if ($this->currentID) {
 			$record->ID = $this->currentID;
 		}
 		$record->write();
 
-		$record->Groups()->add($this->request['GroupID']);
+		$record->Groups()->add($this->_request['GroupID']);
 
 		$FirstName = Convert::raw2js($record->FirstName);
 		$Surname = Convert::raw2js($record->Surname);
@@ -897,7 +923,6 @@ JS;
 	 */
 	public function addarticle($request) {
 		$this->setCachedRequest($request);
-		$this->setCurrentPageIDFromRequest();
 
 		$ID = intval($request->getVar('ParentID'));
 		$securityMsg = null;
@@ -924,8 +949,10 @@ JS;
 		}
 
 		$article = $newsletter->createArticle();
-		$form = $this->getArticleEditForm($article->ID);
-		return $this->showWithEditForm($form);
+		$this->currentID = $article->ID;
+
+		$this->getArticleEditForm();
+		return $this->showWithEditForm();
 	}
 
 	/**
@@ -937,8 +964,8 @@ JS;
 
 		$this->currentID = $this->newNewsletterType();
 
-		$form = $this->getNewsletterTypeEditForm($this->currentID);
-		return $this->showWithEditForm($form);
+		$this->getNewsletterTypeEditForm($this->currentID);
+		return $this->showWithEditForm();
 	}
 
 	/**
@@ -946,12 +973,11 @@ JS;
 	 * Top level call
 	 */
 	public function adddraft($params) {
-		$this->setCachedRequest();
+		$this->setCachedRequest($_REQUEST);
 
-		$draftID = $this->newDraft($this->request['ParentID']);
-		// Needed for shownewsletter() to work
-		$this->currentID = $draftID;
-		return $this->shownewsletter($params);
+		$this->currentID = $this->newDraft($this->_request['ParentID']);
+
+		return $this->shownewsletter();
 	}
 
 	/**
@@ -1025,11 +1051,16 @@ JS;
 
 	public function displayfilefield() {
 		$id = $this->urlParams['ID'];
+		$this->form = $this->UploadForm();
 
-		return $this->customise(array('ID' => $id, "UploadForm" => $this->UploadForm()))->renderWith('Newsletter_RecipientImportField');
+		return $this->customise(array('ID' => $id, "UploadForm" => $this->form))->renderWith('Newsletter_RecipientImportField');
 	}
 
 	function UploadForm( $id = null ) {
+		$this->setCachedRequest($this->getRequest());
+		$this->setCurrentPageIDFromRequest();
+		$this->setNewsletterTypeFromRequest();
+
 		if (!$id) {
 			$id = $this->urlParams['ID'];
 		}
@@ -1091,28 +1122,26 @@ JS;
 	}
 
 	public function setCurrentPageIDFromRequest() {
-		$request = $this->getCachedRequest();
-		$id = 0;
+		if ($this->currentID === null) {
+			$request = $this->getCachedRequest();
+			$id = 0;
 
-		if (isset($request['ID'])) {
-			$id = $request['ID'];
-		}
-		else if (isset($request['NewsletterID'])) {
-			$id = $request['NewsletterID'];
-		}
+			if (isset($request['ID'])) {
+				$id = $request['ID'];
+			}
+			else if (isset($request['NewsletterID'])) {
+				$id = $request['NewsletterID'];
+			}
 
-		$this->currentID = intval($id);
-		$this->setCurrentPageID($this->currentID);
+			$this->currentID = intval($id);
+			$this->setCurrentPageID($this->currentID);
+		}
 	}
 
 	public function setNewsletterFromRequest() {
 		if (!$this->newsletter) {
 			if ($this->currentID) {
 				$this->newsletter = DataObject::get_by_id('Newsletter', $this->currentID);
-			}
-
-			if(!$this->newsletter) {
-				$this->newsletter = new Newsletter;
 			}
 		}
 	}
@@ -1142,17 +1171,51 @@ JS;
 	}
 
 	protected function getCachedRequest() {
-		return $this->request ?: $_REQUEST;
+		if ($this->_request === null) {
+			$this->setCachedRequest();
+		}
+		return $this->_request;
 	}
 
 	protected function setCachedRequest($params = null) {
-		if ($params) {
-			$this->request = $params instanceof SS_HTTPRequest
-				? $params->allParams()
-				: $params;
+		if (is_object($params) && $params instanceof SS_HTTPRequest) {
+			$params = $params->allParams();
 		}
-		else {
-			$this->request = $_REQUEST;
+		if (is_object($this->_request) && $this->_request instanceof SS_HTTPRequest) {
+			$this->_request = $this->_request->allParams();
 		}
+		
+		if (!$this->_request) {
+			if ($params) {
+				$this->_request = $params;
+			}
+			else {
+				$this->_request = $_REQUEST;
+			}
+		}
+		else if ($params) {
+			foreach ($params as $key => $value) {
+				if ($value) {
+					if (!empty($this->_request[$key]) || !isset($this->_request[$key])) {
+						$this->_request[$key] = $value;
+					}
+					// Requests from the DataObjectManager initially set the ID to 'field'
+					else if ($key === 'ID' && !is_numeric($this->_request[$key])) {
+						$this->_request[$key] = $value;
+					}
+				}
+			}
+		}
+	}
+
+	public function FormObjectLink($name) {
+		if (!$this->form) {
+			throw new Exception('$this->form not set');
+		}
+		$link = Controller::join_links($this->form->controller->Link(), $this->form->name);
+		if ($this->newsletter) {
+			$link .= "?NewsletterID={$this->newsletter->ID}";
+		}
+		return $link;
 	}
 }
