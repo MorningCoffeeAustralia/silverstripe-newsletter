@@ -5,6 +5,7 @@ en:
     RENDERTEMPLATE: 'Template the newsletter render to'
     Recipients: 'Mailing list recipients'
     SaveAsNewMessage: 'New Newsletter created as copy of the sent newsletter'
+    SaveBeforeAddingRecipients: 'Recipients may be added after saving the mailing list'
     SendMessage: 'Send-out process started successfully. Check the progress in the "Sent To" tab'
     SendTestEmail: 'Send Test Email'
     SentTo: 'Sent to'
