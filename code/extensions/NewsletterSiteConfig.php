@@ -3,14 +3,10 @@
  * @package  newsletter
  */
 
-class NewsletterSiteConfig extends DataExtension{
-	function extraStatics($class = null, $extension = null) {
-		return array(
-			'db' => array(
-				"GlobalUnsubscribe" => "Boolean",
-			)
-		);
-	}
+class NewsletterSiteConfig extends DataExtension {
+	private static $db = array(
+		'GlobalUnsubscribe' => 'Boolean'
+	);
 
 	public function updateCMSFields(FieldList $fields) {
 		$fields->addFieldToTab("Root",
