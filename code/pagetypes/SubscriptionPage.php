@@ -130,7 +130,7 @@ class SubscriptionPage extends Page {
 				'<p>%s</p>',
 				sprintf(
 					'You haven\'t defined any mailing list yet, please go to '
-					. '<a href=\"%s\">the newsletter administration area</a> '
+					. '<a href="%s">the newsletter administration area</a> '
 					. 'to define a mailing list.',
 					singleton('NewsletterAdmin')->Link()
 				)
