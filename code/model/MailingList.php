@@ -81,15 +81,32 @@ class MailingList extends DataObject {
 			"Blacklisted" => false,
 		);
 
-		$recipientsGrid = GridField::create(
-			'Recipients',
-			_t('NewsletterAdmin.Recipients', 'Mailing list recipients'),
-			$this->Recipients(),
-			$gridFieldConfig
-		);
+		if ($this->ID) {
+			$fields->addFieldToTab(
+				'Root.Main',
+				new FieldGroup(
+					GridField::create(
+						'Recipients',
+						_t('NewsletterAdmin.Recipients', 'Mailing list recipients'),
+						$this->Recipients(),
+						$gridFieldConfig
+					)
+				)
+			);
+		}
+		else {
+			$fields->addFieldToTab(
+				'Root.Main',
+				new LiteralField(
+					'Recipients',
+					_t(
+						'NewsletterAdmin.SaveBeforeAddingRecipients',
+						'<h3>Recipients may be added after saving the mailing list</h3>'
+					)
+				)
+			);
+		}
 
-
-		$fields->addFieldToTab('Root.Main',new FieldGroup($recipientsGrid));
 		$this->extend("updateCMSFields", $fields);		
 
 		return $fields;
@@ -111,6 +128,8 @@ class MailingList extends DataObject {
 	 * Returns all recipients who aren't blacklisted, and are verified.
 	 */
 	public function ActiveRecipients() {
-		return $this->Recipients()->exclude('Blacklisted', 1)->exclude('Verified', 0);
+		return $this->ID
+				? $this->Recipients()->exclude('Blacklisted', 1)->exclude('Verified', 0)
+				: new DataList('Recipient');
 	}
 }
