@@ -6,7 +6,7 @@
 /**
  * Single newsletter instance. 
  */
-class Newsletter extends DataObject implements CMSPreviewable{
+class Newsletter extends DataObject implements CMSPreviewable {
 
 	static $db = array(
 		"Status"				=> "Enum('Draft, Sending, Sent', 'Draft')",
@@ -19,6 +19,7 @@ class Newsletter extends DataObject implements CMSPreviewable{
 	);
 
 	static $has_many = array(
+		"Articles"              => "NewsletterArticle",
 		"SendRecipientQueue"	=> "SendRecipientQueue",
 		"TrackedLinks"			=> "Newsletter_TrackedLink"
 	);
