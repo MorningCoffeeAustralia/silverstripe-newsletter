@@ -304,11 +304,16 @@ class Recipient extends DataObject {
 	/**
 	 * Takes a single string and attempts to explode it into first and last name
 	 *
-	 * @param string $name
+	 * @param string  $name
+	 * @param boolean $write Save the record after filling fields
 	 */
-	public function fillNameFromString($name) {
+	public function fillNameFromString($name, $write = true) {
 		$name = explode(' ', $name);
-		$recipient->FirstName = array_shift($name[0]);
-		$recipient->LastName = $name ? implode(' ', $name) : '';
+		$this->FirstName = array_shift($name[0]);
+		$this->LastName = $name ? implode(' ', $name) : '';
+
+		if ($write) {
+			$this->write();
+		}
 	}
 }
