@@ -300,4 +300,15 @@ class Recipient extends DataObject {
 		}
 		return $fields;
 	}
+
+	/**
+	 * Takes a single string and attempts to explode it into first and last name
+	 *
+	 * @param string $name
+	 */
+	public function fillNameFromString($name) {
+		$name = explode(' ', $name);
+		$recipient->FirstName = array_shift($name[0]);
+		$recipient->LastName = $name ? implode(' ', $name) : '';
+	}
 }
