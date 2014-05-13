@@ -309,7 +309,7 @@ class Recipient extends DataObject {
 	 */
 	public function fillNameFromString($name, $write = true) {
 		$name = explode(' ', $name);
-		$this->FirstName = array_shift($name[0]);
+		$this->FirstName = array_shift($name);
 		$this->LastName = $name ? implode(' ', $name) : '';
 
 		if ($write) {
