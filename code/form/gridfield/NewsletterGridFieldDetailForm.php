@@ -158,6 +158,22 @@ class NewsletterGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_Item
 			$newNewsletter->Subject = $newSubject;
 
 			$newNewsletter->write();
+
+			$articles = $newNewsletter->Articles();
+			foreach ($origNewsletter->Articles() as $article) {
+				$newArticle = clone $article;
+				$newArticle->ID = null;
+				$newArticle->Created = null;
+				$newArticle->LastEdited = null;
+				$newArticle->write();
+				$articles->add($newArticle);
+
+				$images = $article->Images();
+				$newImages = $newArticle->Images();
+				foreach($images as $image) {
+					$newImages->add($image);
+				}
+			}
 		} catch(ValidationException $e) {
 			$form->sessionMessage($e->getResult()->message(), 'bad');
 			$responseNegotiator = new PjaxResponseNegotiator(array(
