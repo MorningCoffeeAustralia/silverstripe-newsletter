@@ -61,7 +61,9 @@ class NewsletterEmail extends Email {
 				'AbsoluteBaseURL' => Director::absoluteBaseURLWithAuth()
 			)));
 
-			//Recipient Fields ShortCode parsing
+			$this->body = $this->body->forTemplate();
+
+			// Recipient Fields ShortCode parsing
 			$bodyViewer = new SSViewer_FromString($this->body);
 			$text = $bodyViewer->process($this->templateData());
 			
