@@ -11,6 +11,11 @@ class NewsletterGridFieldDetailForm extends GridFieldDetailForm {
 }
 
 class NewsletterGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemRequest {
+	private static $allowed_actions = array(
+		'emailpreview',
+		'ItemEditForm',
+		'preview'
+	);
 
 	public function updateCMSActions($actions) {
 		if (empty($this->record->Status) || $this->record->Status == "Draft") {
@@ -36,6 +41,7 @@ class NewsletterGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_Item
 							->setAttribute('data-icon', 'accept')
 							->setUseButtonTag(true), 'action_doSave');
 		}
+
 		return $actions;
 	}
 
@@ -89,7 +95,7 @@ class NewsletterGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_Item
 	 */
 	public function emailpreview(SS_HTTPRequest $request = null) {
 		$emailVar = $request->getVar('email');
-		
+
 		$recipient = new Recipient(Recipient::$test_data);
 		if ($request && !empty($emailVar)) {
 			$recipient->Email = Convert::raw2js($emailVar);
