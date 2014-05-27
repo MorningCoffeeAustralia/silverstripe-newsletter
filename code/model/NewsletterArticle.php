@@ -7,12 +7,12 @@
  * Single newsletter article instance. 
  */
 class NewsletterArticle extends DataObject {
-	static $db = array(
+	private static $db = array(
 		'Title'    => 'Varchar(255)',
 		'Content'  => 'HTMLText'
 	);
 
-	static $has_one = array(
+	private static $has_one = array(
 		'Newsletter' => 'Newsletter'
 	);
 }
