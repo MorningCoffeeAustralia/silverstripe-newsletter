@@ -60,11 +60,8 @@ class NewsletterEmail extends Email {
 		$this->ss_template = $newsletter->RenderTemplate;
 		
 		if($this->body && $this->newsletter) {
-		
-			$text = $this->body->forTemplate();
-
 			//Recipient Fields ShortCode parsing
-			$bodyViewer = new SSViewer_FromString($text);
+			$bodyViewer = new SSViewer_FromString($this->body);
 			$text = $bodyViewer->process($this->templateData());
 			
 			// find all the matches

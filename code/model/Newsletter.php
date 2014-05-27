@@ -402,8 +402,20 @@ class Newsletter extends DataObject implements CMSPreviewable {
 
 
 	function getContentBody(){
-		$content = $this->obj('Content');
-		
+		$manifest = SS_TemplateLoader::instance()->getManifest();
+
+		$theme = Config::inst()->get('SSViewer', 'theme_enabled')
+					? Config::inst()->get('SSViewer', 'theme')
+					: null;
+
+		if ($manifest->getCandidateTemplate("{$this->RenderTemplate}_Body", $theme)) {
+			$content = $this->renderWith("{$this->RenderTemplate}_Body");
+		}
+		else {
+			$content = $this->obj('Content');
+			$content = $content->forTemplate();
+		}
+
 		$this->extend("updateContentBody", $content);
 		return $content;
 	}
