@@ -311,9 +311,9 @@ class Newsletter extends DataObject implements CMSPreviewable {
 					while(($templateFile = readdir($templateDir)) !== false) {
 						// *.ss files are templates
 						if( preg_match( '/(.*)\.ss$/', $templateFile, $match )){
-							// only grab those haveing $Body coded
-							if(strpos("\$Body", file_get_contents($path."/".$templateFile)) === false){
-								$templates[$match[1]] = preg_replace('/_?([A-Z])/', " $1", $match[1]);
+							// only grab those templates that include $Body
+							if(strpos(file_get_contents($path."/".$templateFile), '$Body') !== false){
+								$templates[$match[1]] = preg_replace('/[^^]_?([A-Z])/', " $1", $match[1]);
 							}
 
 						}
