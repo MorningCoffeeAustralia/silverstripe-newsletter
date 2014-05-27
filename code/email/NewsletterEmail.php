@@ -48,18 +48,19 @@ class NewsletterEmail extends Email {
 		$this->fakeRecipient = $fakeRecipient;
 		
 		parent::__construct($this->newsletter->SendFrom, $this->recipient->Email);
-
-		$this->populateTemplate(new ArrayData(array(
-			'UnsubscribeLink' => $this->UnsubscribeLink(),
-			'SiteConfig' => DataObject::get_one('SiteConfig'),
-			'AbsoluteBaseURL' => Director::absoluteBaseURLWithAuth()
-		)));
 		
 		$this->body = $newsletter->getContentBody();
 		$this->subject = $newsletter->Subject;
 		$this->ss_template = $newsletter->RenderTemplate;
 		
 		if($this->body && $this->newsletter) {
+			$this->populateTemplate(new ArrayData(array(
+				'Articles' => $newsletter->Articles(),
+				'UnsubscribeLink' => $this->UnsubscribeLink(),
+				'SiteConfig' => DataObject::get_one('SiteConfig'),
+				'AbsoluteBaseURL' => Director::absoluteBaseURLWithAuth()
+			)));
+
 			//Recipient Fields ShortCode parsing
 			$bodyViewer = new SSViewer_FromString($this->body);
 			$text = $bodyViewer->process($this->templateData());
