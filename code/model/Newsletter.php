@@ -197,14 +197,20 @@ class Newsletter extends DataObject implements CMSPreviewable {
 		if($this && $this->exists()){
 			$fields->removeByName("MailingLists");
 			$mailinglists = MailingList::get();
+			$source = $mailinglists->map('ID', 'FullTitle');
 
 			$fields->addFieldToTab("Root.Main",
-				new CheckboxSetField(
+				$field = new CheckboxSetField(
 					"MailingLists", 
 					_t('Newsletter.SendTo', "Send To", 'Selects mailing lists from set of checkboxes'), 
-					$mailinglists->map('ID', 'FullTitle')
+					$source
 				)
 			);
+
+			if ($source->Count() === 1) {
+				// No point making people manually select the only mailing list
+				$field->setDefaultItems(array(reset($source)->First()->ID));
+			}
 		}
 
 		if($this->Status === 'Sending' || $this->Status === 'Sent') {
