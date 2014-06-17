@@ -8,7 +8,7 @@
  */
 class Newsletter extends DataObject implements CMSPreviewable {
 
-	static $db = array(
+	private static $db = array(
 		"Status"				=> "Enum('Draft, Sending, Sent', 'Draft')",
 		"Subject"				=> "Varchar(255)",
 		"Content"				=> "HTMLText",
@@ -18,38 +18,38 @@ class Newsletter extends DataObject implements CMSPreviewable {
 		"RenderTemplate"		=> "Varchar",
 	);
 
-	static $has_many = array(
+	private static $has_many = array(
 		"Articles"              => "NewsletterArticle",
 		"SendRecipientQueue"	=> "SendRecipientQueue",
 		"TrackedLinks"			=> "Newsletter_TrackedLink"
 	);
 
-	static $many_many = array(
+	private static $many_many = array(
 		"MailingLists"			=> "MailingList"
 	);
 
-	static $searchable_fields = array(
+	private static $searchable_fields = array(
 		"Subject",
 		"Content",
 		"SendFrom",
 		"SentDate"
 	);
 
-	static $default_sort = array(
+	private static $default_sort = array(
 		"LastEdited DESC"
 	);
 
-	static $summary_fields = array(
+	private static $summary_fields = array(
 		"Subject",
 		"SentDate",
 		"Status"
 	);
 
-	static $required_fields = array(
+	private static $required_fields = array(
 		'Subject', 'SendFrom'
 	);
 
-	static $required_relations = array(
+	private static $required_relations = array(
 		'MailingLists'
 	);
 
@@ -214,8 +214,21 @@ class Newsletter extends DataObject implements CMSPreviewable {
 		}
 
 		if($this->Status === 'Sending' || $this->Status === 'Sent') {
-			//make the whole field read-only
-			$fields = $fields->transform(new ReadonlyTransformation());
+			// Make the fields on Root.Main read-only
+			$tab = $fields->fieldByName('Root.Main');
+			$readOnlyFields = new FieldList;
+			foreach ($tab->Fields() as $field) {
+				$readOnlyFields->push($field->transform(new ReadonlyTransformation()));
+			}
+			$tab->setChildren($readOnlyFields);
+
+			// Disable add and delete actions on Articles
+			$field = $fields->dataFieldByName('Articles');
+			$config = $field->getConfig();
+			foreach (array('GridFieldAddNewButton', 'GridFieldDeleteAction') as $type) {
+				$config->removeComponentsByType($type);
+			}
+
 			$fields->push(new HiddenField("NEWSLETTER_ORIGINAL_ID", "", $this->ID));
 
 			$gridFieldConfig = GridFieldConfig::create()->addComponents(
@@ -276,9 +289,31 @@ class Newsletter extends DataObject implements CMSPreviewable {
 			}
 		}
 
-
-
 		return $fields;
+	}
+
+	/**
+	 * Create a teaser of the primary newsletter content
+	 *
+	 * @param  int    $maxLength
+	 * @return string
+	 */
+	public function getAutomaticTeaser($maxLength = 375) {
+		if (strlen($this->Content) > $maxLength) {
+			$maxLength -= 3;
+			$teaser = strip_tags($this->Content);
+
+			preg_match("/^(.{1,$maxLength})\b/", $teaser, $matches);
+			if (substr($matches[1], -1) !== '.') {
+				$teaser = '<p>' . substr($matches[1], 0, -1) . '&hellip;</p>';
+
+			}
+		}
+		else {
+			$teaser = $this->Content;
+		}
+
+		return $teaser;
 	}
 
 	/**
