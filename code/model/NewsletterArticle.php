@@ -21,7 +21,23 @@ class NewsletterArticle extends DataObject {
 	public function getCMSFields() {
 		$fields = parent::getCMSFields();
 		$fields->removeByName('HTMLID');
+
+		$newsletter = $this->Newsletter();
+		if ($newsletter->Status === 'Sending' || $newsletter->Status === 'Sent') {
+			$fields = $fields->transform(new ReadonlyTransformation());
+		}
+
 		return $fields;
+	}
+
+	/**
+	 * Since SS uses a base tag, # links are relative to / rather than the current page.
+	 * This returns the full page URL followed by the # link.
+	 *
+	 * @return string
+	 */
+	public function getHTMLIDForLink() {
+		return "{$_SERVER['REQUEST_URI']}#{$this->HTMLID}";
 	}
 
 	public function onBeforeWrite() {
