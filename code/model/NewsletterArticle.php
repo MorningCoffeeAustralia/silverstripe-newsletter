@@ -8,15 +8,18 @@
  */
 class NewsletterArticle extends DataObject {
 	private static $db = array(
-		'Title'    => 'Varchar(255)',
-		'Content'  => 'HTMLText',
+		'Title'     => 'Varchar(255)',
+		'Content'   => 'HTMLText',
 		// Automatically generated for use as an id or class in templates
-		'HTMLID'   => 'Varchar(255)'
+		'HTMLID'    => 'Varchar(255)',
+		'SortOrder' => 'Int'
 	);
 
 	private static $has_one = array(
 		'Newsletter' => 'Newsletter'
 	);
+
+	private static $default_sort = '"SortOrder"';
 
 	public function getCMSFields() {
 		$fields = parent::getCMSFields();

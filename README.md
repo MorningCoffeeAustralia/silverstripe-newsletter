@@ -24,6 +24,10 @@ Features:
  * Bounce tracking (experimental)
  * Decoratable `Recipient` class to add more properties
 
+## Requirements
+
+SortableGridField: https://github.com/UndefinedOffset/SortableGridField.git
+
 ## Configuration
 
 ### Email Addresses

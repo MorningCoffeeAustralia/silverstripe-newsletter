@@ -194,6 +194,12 @@ class Newsletter extends DataObject implements CMSPreviewable {
 			);
 		}
 
+		// Make Articles sortable
+		$config = GridFieldConfig_RelationEditor::create();
+		$config->addComponent(new GridFieldSortableRows('SortOrder'));
+		$field = new GridField('Articles', 'Articles', $this->Articles(), $config);
+		$fields->addFieldToTab('Root.Articles', $field);
+
 		if($this && $this->exists()){
 			$fields->removeByName("MailingLists");
 			$mailinglists = MailingList::get();
