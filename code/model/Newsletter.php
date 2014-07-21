@@ -194,11 +194,23 @@ class Newsletter extends DataObject implements CMSPreviewable {
 			);
 		}
 
-		// Make Articles sortable
-		$config = GridFieldConfig_RelationEditor::create();
-		$config->addComponent(new GridFieldSortableRows('SortOrder'));
-		$field = new GridField('Articles', 'Articles', $this->Articles(), $config);
-		$fields->addFieldToTab('Root.Articles', $field);
+		// Newsletter Articles can only be saved after the Newsletter is created
+		if ($this->ID) {
+			// Make Articles sortable
+			$config = GridFieldConfig_RelationEditor::create();
+			$config->addComponent(new GridFieldSortableRows('SortOrder'));
+			$field = new GridField('Articles', 'Articles', $this->Articles(), $config);
+			$fields->addFieldToTab('Root.Articles', $field);
+		}
+		else {
+			$fields->addFieldToTab(
+				'Root.Articles',
+				new LiteralField(
+					'Articles',
+					'<h3>Articles can be created after the first Newsletter save.</h3>'
+				)
+			);
+		}
 
 		if($this && $this->exists()){
 			$fields->removeByName("MailingLists");
