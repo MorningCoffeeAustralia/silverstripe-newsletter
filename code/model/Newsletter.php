@@ -103,11 +103,13 @@ class Newsletter extends DataObject implements CMSPreviewable {
 		$fields = parent::getCMSFields();
 
 		$fields->removeByName('Status');
-		$fields->addFieldToTab(
-			'Root.Main',
-			new ReadonlyField('Status', $this->fieldLabel('Status')),
-			'Subject'
-		);
+		if ($this->ID) {
+			$fields->addFieldToTab(
+				'Root.Main',
+				new ReadonlyField('Status', $this->fieldLabel('Status')),
+				'Subject'
+			);
+		}
 		
 		$fields->removeByName("SentDate");
 		if ($this->Status == "Sent") {
@@ -150,11 +152,19 @@ class Newsletter extends DataObject implements CMSPreviewable {
 		// Only show template selection if there's more than one template set
 		$templateSource = $this->templateSource();
 		if(count($templateSource) > 1) {
+			// Allow the DowndownField value to be overridden by an Extension.
+			// Handy for setting a default value.
+			$value = $this->extend('updateRenderTemplateValue', $templateSource);
+			if ($value) $value = array_shift($value);
+
 			$fields->replaceField(
 				"RenderTemplate", 
-				new DropdownField("RenderTemplate", _t('NewsletterAdmin.RENDERTEMPLATE',
-					'Template the newsletter render to'), 
-				$templateSource)
+				new DropdownField(
+					"RenderTemplate",
+					_t('NewsletterAdmin.RENDERTEMPLATE', 'Template the newsletter render to'),
+					$templateSource,
+					$value ?: ''
+				)
 			);	
 
 			$explanationTitle = _t("Newletter.TemplateExplanationTitle",
