@@ -209,6 +209,8 @@ class Newsletter extends DataObject implements CMSPreviewable {
 			// Make Articles sortable
 			$config = GridFieldConfig_RelationEditor::create();
 			$config->addComponent(new GridFieldSortableRows('SortOrder'));
+			// Remove searching since this is a HasMany relationship
+			$config->removeComponentsByType('GridFieldAddExistingAutocompleter');
 			$field = new GridField('Articles', 'Articles', $this->Articles(), $config);
 			$fields->addFieldToTab('Root.Articles', $field);
 		}
