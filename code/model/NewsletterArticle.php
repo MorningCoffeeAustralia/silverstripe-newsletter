@@ -24,6 +24,7 @@ class NewsletterArticle extends DataObject {
 	public function getCMSFields() {
 		$fields = parent::getCMSFields();
 		$fields->removeByName('HTMLID');
+		$fields->removeByName('SortOrder');
 
 		$newsletter = $this->Newsletter();
 		if ($newsletter->Status === 'Sending' || $newsletter->Status === 'Sent') {
