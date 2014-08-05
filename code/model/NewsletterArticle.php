@@ -34,16 +34,6 @@ class NewsletterArticle extends DataObject {
 		return $fields;
 	}
 
-	/**
-	 * Since SS uses a base tag, # links are relative to / rather than the current page.
-	 * This returns the full page URL followed by the # link.
-	 *
-	 * @return string
-	 */
-	public function getHTMLIDForLink() {
-		return "{$_SERVER['REQUEST_URI']}#{$this->HTMLID}";
-	}
-
 	public function onBeforeWrite() {
 		parent::onBeforeWrite();
 
