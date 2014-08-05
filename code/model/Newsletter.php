@@ -328,19 +328,11 @@ class Newsletter extends DataObject implements CMSPreviewable {
 	 * @param  int    $maxLength
 	 * @return string
 	 */
-	public function getAutomaticTeaser($maxLength = 375) {
-		if (strlen($this->Content) > $maxLength) {
-			$maxLength -= 3;
-			$teaser = strip_tags($this->Content);
+	public function getAutomaticTeaser($maxLength = 400) {
+		$teaser = strip_tags($this->Content);
 
-			preg_match("/^(.{1,$maxLength})\b/", $teaser, $matches);
-			if (substr($matches[1], -1) !== '.') {
-				$teaser = '<p>' . substr($matches[1], 0, -1) . '&hellip;</p>';
-
-			}
-		}
-		else {
-			$teaser = $this->Content;
+		if (strlen($teaser) > $maxLength) {
+			$teaser = '<p>' . substr($teaser, 0, $maxLength - 3) . '&hellip;</p>';
 		}
 
 		return $teaser;
