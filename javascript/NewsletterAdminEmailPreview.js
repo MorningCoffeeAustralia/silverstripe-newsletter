@@ -6,7 +6,7 @@
 		$('a.newsletter-preview-email').entwine({
 			onclick: function(e) {
 				var email = this.attr('href').match(/email=(.*)/);
-				var prompt = this.sendPrompt(email[1]);
+				var prompt = this.sendPrompt(decodeURIComponent(email[1]));
 				if (prompt !== null) {
 					var base = $('base').attr('href'); //IE needs this
 					var newHref = base + this.attr('href').replace(/email=.*$/gi,'email='+prompt);
